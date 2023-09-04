@@ -52,7 +52,7 @@ pub mod pgn {
             s.push_str(&format!("{} ", m));
         }
         s.pop();
-        s
+        textwrap::fill(&s, 80)
     }
 
     #[cfg(test)]
