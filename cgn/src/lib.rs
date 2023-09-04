@@ -12,7 +12,10 @@ pub mod pgn {
         let mut lines = s.lines();
         while let Some(line) = lines.next() {
             if line.starts_with('[') {
-                let mut tag = line.trim_start_matches('[').trim_end_matches(']').splitn(2, ' ');
+                let mut tag = line
+                    .trim_start_matches('[')
+                    .trim_end_matches(']')
+                    .splitn(2, ' ');
                 let key = tag.next();
                 let value = tag.next();
                 match (key, value) {
