@@ -1,11 +1,20 @@
-use cgn::pgn::{pgn_to_string, string_to_pgn};
+use cgn::pgn::string_to_pgn;
+use std::io::prelude::*;
+use flate2::Compression;
+use flate2::write::ZlibEncoder;
+
 fn main() {
-    let pgn = include_str!("pgn.txt");
+    let str = include_str!("pgn.txt");
+    let pgn = string_to_pgn(str);
 
-    let pgn_s = string_to_pgn(pgn);
-    println!("{:?}", pgn_s.tags);
-    println!("{:?}", pgn_s.moves);
+    let pgn_bytes = bincode::serialize(&pgn).unwrap();
 
-    let str = pgn_to_string(&pgn_s);
-    println!("{}", str);
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::best());
+    encoder.write_all(&pgn_bytes).unwrap();
+
+    let pgn_compressed = encoder.finish().unwrap();
+
+    println!("Original size: {}", str.as_bytes().len()); 
+    println!("Serialized size: {}", pgn_bytes.len());
+    println!("Compressed size: {}", pgn_compressed.len());
 }

@@ -1,4 +1,7 @@
 pub mod pgn {
+    use serde::{Serialize, Deserialize};
+
+    #[derive(Debug, Serialize, Deserialize)]
     pub struct Pgn {
         pub tags: Vec<(String, String)>,
         pub moves: Vec<String>,
@@ -9,15 +12,19 @@ pub mod pgn {
             tags: Vec::new(),
             moves: Vec::new(),
         };
+
         let mut lines = s.lines();
         while let Some(line) = lines.next() {
             if line.starts_with('[') {
+                // Extract tag key and value
                 let mut tag = line
                     .trim_start_matches('[')
                     .trim_end_matches(']')
                     .splitn(2, ' ');
                 let key = tag.next();
                 let value = tag.next();
+
+                // If both key and value are Some, push to tags vector
                 match (key, value) {
                     (Some(key), Some(value)) => {
                         let key = key.trim_end_matches('"').to_string();
@@ -27,31 +34,50 @@ pub mod pgn {
                     _ => continue,
                 }
             } else {
+                // Extract moves
                 let mut moves = line.split_whitespace();
                 while let Some(m) = moves.next() {
+                    // If string ends with a dot, skip it since it's not a move
                     if m.ends_with('.') {
                         continue;
                     }
+
                     pgn.moves.push(m.to_string());
                 }
             }
         }
+
+        // Remove last move since it's the result of the game
+        pgn.moves.pop();
         pgn
     }
 
     pub fn pgn_to_string(pgn: &Pgn) -> String {
         let mut s = String::new();
+
+        // Add tags
         for tag in &pgn.tags {
             s.push_str(&format!("[{} \"{}\"]\n", tag.0, tag.1));
         }
         s.push_str("\n");
+
+        // Add moves
         for (i, m) in pgn.moves.iter().enumerate() {
+            // Add move number
             if i % 2 == 0 {
                 s.push_str(&format!("{}. ", i / 2 + 1));
             }
             s.push_str(&format!("{} ", m));
         }
-        s.pop();
+
+        // Add result of game after moves
+        let result = pgn.tags.iter().find(|(k, _)| k == "Result");
+        match result {
+            Some((_, r)) => s.push_str(&format!("{}", r)),
+            None => s.push_str("*"),
+        }
+
+        // Wrap text to 80 characters
         textwrap::fill(&s, 80)
     }
 
@@ -61,68 +87,42 @@ pub mod pgn {
 
         #[test]
         fn string_to_pgn_are_tags_correct() {
-            let str = "[Event \"F/S Return Match\"]\n\
-                   [Site \"Belgrade, Serbia JUG\"]\n\
-                   [Date \"1992.11.04\"]\n\
-                   [Round \"29\"]\n\
-                   [White \"Fischer, Robert J.\"]\n\
-                   [Black \"Spassky, Boris V.\"]\n\
-                   [Result \"1/2-1/2\"]\n\
-                   \n\
-                   1. e4 e5 2. Nf3 Nc6 3. Bb5 a6";
+            let str = include_str!("pgn.txt");
             let pgn = string_to_pgn(str);
             assert_eq!(
                 pgn.tags[0],
-                ("Event".to_string(), "F/S Return Match".to_string())
+                (
+                    "Event".to_string(),
+                    "Titled Tuesday Blitz January 03 Early 2023".to_string()
+                )
             );
-            assert_eq!(
-                pgn.tags[1],
-                ("Site".to_string(), "Belgrade, Serbia JUG".to_string())
-            );
-            assert_eq!(pgn.tags[2], ("Date".to_string(), "1992.11.04".to_string()));
-            assert_eq!(pgn.tags[3], ("Round".to_string(), "29".to_string()));
+            assert_eq!(pgn.tags[1], ("Site".to_string(), "".to_string()));
+            assert_eq!(pgn.tags[2], ("Date".to_string(), "2023.01.03".to_string()));
+            assert_eq!(pgn.tags[3], ("Round".to_string(), "?".to_string()));
             assert_eq!(
                 pgn.tags[4],
-                ("White".to_string(), "Fischer, Robert J.".to_string())
+                ("White".to_string(), "Magnus Carlsen".to_string())
             );
             assert_eq!(
                 pgn.tags[5],
-                ("Black".to_string(), "Spassky, Boris V.".to_string())
+                ("Black".to_string(), "Samvel Ter-Sahakyan".to_string())
             );
-            assert_eq!(pgn.tags[6], ("Result".to_string(), "1/2-1/2".to_string()));
+            assert_eq!(pgn.tags[6], ("Result".to_string(), "1-0".to_string()));
         }
 
         #[test]
         fn string_to_pgn_are_moves_correct() {
-            let str = "[Event \"F/S Return Match\"]\n\
-                   [Site \"Belgrade, Serbia JUG\"]\n\
-                   [Date \"1992.11.04\"]\n\
-                   [Round \"29\"]\n\
-                   [White \"Fischer, Robert J.\"]\n\
-                   [Black \"Spassky, Boris V.\"]\n\
-                   [Result \"1/2-1/2\"]\n\
-                   \n\
-                   1. e4 e5 2. Nf3 Nc6 3. Bb5 a6";
+            let str = include_str!("pgn.txt");
             let pgn = string_to_pgn(str);
-            assert_eq!(pgn.moves[0], "e4");
-            assert_eq!(pgn.moves[1], "e5");
-            assert_eq!(pgn.moves[2], "Nf3");
-            assert_eq!(pgn.moves[3], "Nc6");
-            assert_eq!(pgn.moves[4], "Bb5");
-            assert_eq!(pgn.moves[5], "a6");
+            assert_eq!(pgn.moves[0], "a4");
+            assert_eq!(pgn.moves[1], "Nf6");
+            assert_eq!(pgn.moves[2], "d4");
+            assert_eq!(pgn.moves[3], "d5");
         }
 
         #[test]
         fn pgn_to_string_is_equal() {
-            let str = "[Event \"F/S Return Match\"]\n\
-                   [Site \"Belgrade, Serbia JUG\"]\n\
-                   [Date \"1992.11.04\"]\n\
-                   [Round \"29\"]\n\
-                   [White \"Fischer, Robert J.\"]\n\
-                   [Black \"Spassky, Boris V.\"]\n\
-                   [Result \"1/2-1/2\"]\n\
-                   \n\
-                   1. e4 e5 2. Nf3 Nc6 3. Bb5 a6";
+            let str = include_str!("pgn.txt");
             let pgn = string_to_pgn(str);
             let s = pgn_to_string(&pgn);
             assert_eq!(s, str);
