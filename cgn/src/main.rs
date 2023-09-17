@@ -1,20 +1,13 @@
-use cgn::pgn::string_to_pgn;
-use flate2::write::ZlibEncoder;
-use flate2::Compression;
-use std::io::prelude::*;
+use cgn::pgn_parser::PgnData;
+use pgn_reader::BufferedReader;
 
 fn main() {
     let str = include_str!("pgn.txt");
-    let pgn = string_to_pgn(str);
+    let mut reader = BufferedReader::new_cursor(&str[..]);
+    let mut vis = PgnData::new();
 
-    let pgn_bytes = bincode::serialize(&pgn).unwrap();
-
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::best());
-    encoder.write_all(&pgn_bytes).unwrap();
-
-    let pgn_compressed = encoder.finish().unwrap();
-
-    println!("Original size: {}", str.as_bytes().len());
-    println!("Serialized size: {}", pgn_bytes.len());
-    println!("Compressed size: {}", pgn_compressed.len());
+    let result = reader.read_game(&mut vis);
+    for mov in result.unwrap().unwrap().moves {
+        println!("{:?}", mov.to_string());
+    }
 }

@@ -145,3 +145,45 @@ pub mod pgn {
         }
     }
 }
+
+pub mod pgn_parser {
+    use pgn_reader::{RawHeader, SanPlus, Visitor};
+
+    #[derive(Clone, Debug)]
+    pub struct PgnData {
+        pub headers: Vec<(String, String)>,
+        pub moves: Vec<SanPlus>,
+    }
+
+    impl PgnData {
+        pub fn new() -> PgnData {
+            PgnData {
+                headers: vec![],
+                moves: vec![],
+            }
+        }
+    }
+
+    impl Visitor for PgnData {
+        type Result = PgnData;
+
+        fn header(&mut self, _key: &[u8], _value: RawHeader<'_>) {
+            let key = String::from_utf8(_key.to_vec());
+            let value = _value.decode_utf8();
+            match (key, value) {
+                (Ok(key), Ok(value)) => self.headers.push((key, value.to_string())),
+                _ => (),
+            }
+        }
+
+        fn san(&mut self, _san_plus: SanPlus) {
+            self.moves.push(_san_plus)
+        }
+
+        fn end_game(&mut self) -> Self::Result {
+            self.clone()
+        }
+    }
+
+    // TODO: Write tests if this ends up being the way I do things
+}
