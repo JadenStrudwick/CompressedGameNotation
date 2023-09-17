@@ -1,4 +1,20 @@
 pub mod pgn {
+    /**
+     * Module that contains the code that loads the PGN file into a PGN struct.
+     * This struct contains all the raw data of the PGN file.
+     *
+     * It stores the tags as a vector of 2-pair tuples, and moves as a vector of strings
+     * (all additional information about moves such as captures as kept).
+     *
+     * Because it retains information about captures, it is not a 'minimal' representation of the game since,
+     * those captures could be infered. However, the upside of this is that it is very ease to decode a PGN,
+     * struct back into a pgn file as no inference step is required, just straight reading.
+     *
+     * The only small optimation is that in a normal PGN file, the result is printed at the end of the moveset.
+     * This is duplicated and unrequired data, as we already have this in the tags, hence we remove it from the
+     * moveset of the PGN struct, and simply paste from the struct tags when decoding a PGN struct.
+     *
+     */
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Serialize, Deserialize)]
