@@ -174,9 +174,7 @@ pub mod pgn_parser {
         type Result = PgnData;
 
         fn header(&mut self, _key: &[u8], _value: RawHeader<'_>) {
-            let key = String::from_utf8(_key.to_vec());
-            let value = _value.decode_utf8();
-            if let (Ok(key), Ok(value)) = (key, value) {
+            if let (Ok(key), Ok(value)) = (String::from_utf8(_key.to_vec()), _value.decode_utf8()) {
                 self.headers.push((key, value.to_string()));
             }
         }
