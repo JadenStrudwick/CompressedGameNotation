@@ -1,3 +1,4 @@
+mod cgn;
 mod pgn;
 
 fn main() {
@@ -9,9 +10,14 @@ fn main() {
         .unwrap()
         .unwrap();
 
-    if pgn_str == pgn_data.to_string() {
-        println!("Parsed equals original file");
-    } else {
-        println!("Parsed does not equal original file");
-    }
+    let serde_data = cgn::compress(&cgn::SerdeStrat, &pgn_data);
+    println!("Compressed data size: {}", serde_data.len());
+    let serde_decompress_data = cgn::decompress(&cgn::SerdeStrat, &serde_data);
+    assert_eq!(serde_decompress_data.to_string(), pgn_str);
+
+    let serde_compress_data = cgn::compress(&cgn::SerdeCompressStrat, &pgn_data);
+    println!("Compressed data size: {}", serde_compress_data.len());
+    let serde_compress_decompress_data =
+        cgn::decompress(&cgn::SerdeCompressStrat, &serde_compress_data);
+    assert_eq!(serde_compress_decompress_data.to_string(), pgn_str);
 }

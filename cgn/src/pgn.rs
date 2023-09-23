@@ -1,9 +1,33 @@
+use std::str::FromStr;
 use pgn_reader::{RawHeader, SanPlus, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Clone, Debug)]
+pub struct SanPlusWrapper(SanPlus);
+
+impl Serialize for SanPlusWrapper {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.0.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for SanPlusWrapper {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(SanPlusWrapper(pgn_reader::SanPlus::from_str(&s).unwrap()))
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PgnData {
     pub headers: Vec<(String, String)>,
-    pub moves: Vec<SanPlus>,
+    pub moves: Vec<SanPlusWrapper>,
 }
 
 impl PgnData {
@@ -26,7 +50,7 @@ impl std::fmt::Display for PgnData {
             if i % 2 == 0 {
                 s.push_str(&format!("{}. ", i / 2 + 1));
             }
-            s.push_str(&san_plus.to_string());
+            s.push_str(&san_plus.0.to_string());
             s.push(' ');
         }
         if let Some((_, result)) = self.headers.iter().find(|(key, _)| key == "Result") {
@@ -59,7 +83,7 @@ impl Visitor for PgnVisitor {
     }
 
     fn san(&mut self, _san_plus: SanPlus) {
-        self.data.moves.push(_san_plus)
+        self.data.moves.push(SanPlusWrapper(_san_plus));
     }
 
     fn end_game(&mut self) -> Self::Result {
@@ -95,8 +119,8 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        assert_eq!(pgn_data.moves.get(0).unwrap().to_string(), "e4");
-        assert_eq!(pgn_data.moves.get(1).unwrap().to_string(), "e5+");
+        assert_eq!(pgn_data.moves.get(0).unwrap().0.to_string(), "e4");
+        assert_eq!(pgn_data.moves.get(1).unwrap().0.to_string(), "e5+");
         assert_eq!(pgn_data.moves.len(), 2);
     }
 
