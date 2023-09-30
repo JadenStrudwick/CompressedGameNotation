@@ -1,12 +1,19 @@
 use crate::pgn::PgnData;
 
-pub trait CgnCompressionStrategy {
-    fn compress(pgn_data: &PgnData) -> Vec<u8>;
-    fn decompress(compressed_data: &[u8]) -> PgnData;
+type CompressFn = fn(&PgnData) -> Vec<u8>;
+type DecompressFn = fn(&[u8]) -> PgnData;
+
+fn compress(_strategy: CompressFn, pgn_data: &PgnData) -> Vec<u8> {
+    _strategy(pgn_data)
 }
 
-pub struct SerdeStrat;
-impl CgnCompressionStrategy for SerdeStrat {
+fn decompress(_strategy: DecompressFn, compressed_data: &[u8]) -> PgnData {
+    _strategy(compressed_data)
+}
+
+mod SerdeStrategy {
+    use super::*;
+
     fn compress(pgn_data: &PgnData) -> Vec<u8> {
         bincode::serialize(pgn_data).unwrap()
     }
@@ -16,8 +23,9 @@ impl CgnCompressionStrategy for SerdeStrat {
     }
 }
 
-pub struct SerdeCompressStrat;
-impl CgnCompressionStrategy for SerdeCompressStrat {
+mod SerdeCompressStrategy {
+    use super::*;
+
     fn compress(pgn_data: &PgnData) -> Vec<u8> {
         let mut compressed_data = Vec::new();
         let mut encoder =
@@ -31,12 +39,4 @@ impl CgnCompressionStrategy for SerdeCompressStrat {
         let mut decoder = flate2::read::ZlibDecoder::new(compressed_data);
         bincode::deserialize_from(&mut decoder).unwrap()
     }
-}
-
-pub fn compress<S: CgnCompressionStrategy>(_strategy: &S, pgn_data: &PgnData) -> Vec<u8> {
-    S::compress(pgn_data)
-}
-
-pub fn decompress<S: CgnCompressionStrategy>(_strategy: &S, compressed_data: &[u8]) -> PgnData {
-    S::decompress(compressed_data)
 }
