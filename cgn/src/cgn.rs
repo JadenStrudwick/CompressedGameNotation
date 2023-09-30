@@ -3,11 +3,11 @@ use crate::pgn::PgnData;
 type CompressFn = fn(&PgnData) -> Vec<u8>;
 type DecompressFn = fn(&[u8]) -> PgnData;
 
-pub fn compress(_strategy: CompressFn, pgn_data: &PgnData) -> Vec<u8> {
+pub fn apply_compression(_strategy: CompressFn, pgn_data: &PgnData) -> Vec<u8> {
     _strategy(pgn_data)
 }
 
-pub fn decompress(_strategy: DecompressFn, compressed_data: &[u8]) -> PgnData {
+pub fn apply_decompression(_strategy: DecompressFn, compressed_data: &[u8]) -> PgnData {
     _strategy(compressed_data)
 }
 
