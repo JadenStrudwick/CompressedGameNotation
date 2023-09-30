@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use pgn_reader::{RawHeader, SanPlus, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::str::FromStr;
 
 #[derive(Clone, Debug)]
 pub struct SanPlusWrapper(SanPlus);
