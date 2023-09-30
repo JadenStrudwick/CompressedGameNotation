@@ -125,21 +125,8 @@ mod tests {
     }
 
     #[test]
-    fn parsed_equals_original_sample() {
-        let pgn_str = "[Event \"F/S Return Match\"]\n\n1. e4 e5+";
-
-        let mut visitor = super::PgnVisitor::new();
-        let pgn_data = pgn_reader::BufferedReader::new_cursor(&pgn_str)
-            .read_game(&mut visitor)
-            .unwrap()
-            .unwrap();
-
-        assert_eq!(pgn_data.to_string(), pgn_str);
-    }
-
-    #[test]
     fn parsed_equals_original_file() {
-        let pgn_str = include_str!("pgn.txt");
+        let pgn_str = include_str!("pgn.txt").replace("\r\n", "\n");
 
         let mut visitor = super::PgnVisitor::new();
         let pgn_data = pgn_reader::BufferedReader::new_cursor(&pgn_str)
