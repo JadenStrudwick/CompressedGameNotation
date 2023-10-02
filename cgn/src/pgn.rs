@@ -3,7 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::str::FromStr;
 
 #[derive(Clone, Debug)]
-pub struct SanPlusWrapper(SanPlus);
+pub struct SanPlusWrapper(pub SanPlus);
 
 impl Serialize for SanPlusWrapper {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
