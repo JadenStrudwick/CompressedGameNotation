@@ -1,8 +1,7 @@
 use crate::pgn_vistor::PgnVisitor;
 use crate::san_plus_wrapper::SanPlusWrapper;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 /// PGN data struct that holds the headers and moves of a PGN game.
 pub struct PgnData {
     pub headers: Vec<(String, String)>,
