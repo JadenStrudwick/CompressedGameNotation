@@ -3,6 +3,8 @@ mod pgn_data;
 mod pgn_examples;
 mod pgn_vistor;
 mod san_plus_wrapper;
+mod benchmark;
+mod pgn_db_iter;
 
 use wasm_bindgen::prelude::*;
 
