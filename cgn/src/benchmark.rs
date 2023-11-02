@@ -71,6 +71,7 @@ fn collect_metrics(
 #[cfg(test)]
 mod tests {
     #[test]
+    /// Test that metrics can be generated from a single PGN.
     fn can_generate_metrics() {
         let pgn_str = crate::pgn_examples::PGN_STR_EXAMPLE;
         let metrics = super::collect_metrics(

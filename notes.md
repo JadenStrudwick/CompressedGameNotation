@@ -3,10 +3,6 @@
 ## Features
 - [ ] Set up benchmarking utilities
 
-## Misc
-- [ ] Clean up comments, some start with captials inconsistently
-- [ ] Add comments to all tests, explaining what they are testing
-
 # 31st of October 2023
 
 I am currently working on implementing an iterator for the PGN parser.

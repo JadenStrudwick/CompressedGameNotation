@@ -1,4 +1,4 @@
-/// Example PGN string
+/// Example PGN string.
 pub const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
 [Site ""]
 [Date "2023.01.03"]

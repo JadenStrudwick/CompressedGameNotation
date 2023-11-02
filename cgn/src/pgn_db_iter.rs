@@ -67,6 +67,7 @@ mod tests {
     const TEST_DBS_DIR: &str = "./testDBs/";
 
     #[test]
+    /// Test that the iterator can be created.
     fn pgn_db_into_iter() {
         let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "exampleDB.pgn"));
         assert!(iter.next().is_some());
@@ -74,18 +75,21 @@ mod tests {
     }
 
     #[test]
+    /// Test that the iterator is empty when the file is empty.
     fn none_on_empty_file() {
         let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "emptyDB.pgn"));
         assert!(iter.next().is_none());
     }
 
     #[test]
+    /// Test that the iterator is empty when the file is not UTF-8.
     fn none_on_non_utf8_file() {
         let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "nonUtf8DB.pgn"));
         assert!(iter.next().is_none());
     }
 
     #[test]
+    /// Test that the iterator skips empty lines at the start of a game.
     fn skip_empty_lines() {
         let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "emptyLinesDB.pgn"));
         assert!(iter.next().is_some());
