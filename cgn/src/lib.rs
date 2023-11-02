@@ -1,4 +1,4 @@
-mod benchmark;
+mod metrics;
 mod compression;
 mod pgn_data;
 mod pgn_db_iter;

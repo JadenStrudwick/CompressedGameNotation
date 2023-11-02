@@ -24,7 +24,7 @@ struct Metrics {
 /// * `decompress_fn` - The decompression function.
 /// # Returns
 /// The metrics for the compression strategy.
-fn collect_metrics(
+pub fn collect_metrics(
     pgn_str: &str,
     compress_fn: fn(&PgnData) -> Vec<u8>,
     decompress_fn: fn(&[u8]) -> PgnData,
