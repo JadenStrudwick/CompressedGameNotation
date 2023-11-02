@@ -5,6 +5,7 @@
 
 ## Misc
 - [ ] Clean up comments, some start with captials inconsistently
+- [ ] Add comments to all tests, explaining what they are testing
 
 # 31st of October 2023
 
@@ -67,3 +68,8 @@ Also I have changed the PgnData struct to only support 'reduced export format' P
 no comments, no RAVs, no NAGs.
 
 This means we will have "lossy" compression, but we still capture all the vital information about a game.
+
+I have also just finished setting up the code coverage tooling with tarpaulin and codecov.io. This will allow us to see how much of the code is covered by tests. This is important for ensuring we have good test coverage.
+
+Currently there is approx 75% code coverage. The main areas not covered are benchmark.rs and lib.rs, as those are still under active development.
+

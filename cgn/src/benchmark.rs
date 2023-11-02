@@ -69,3 +69,17 @@ fn collect_metrics(
 }
 
 
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn can_generate_metrics() {
+        let pgn_str = crate::pgn_examples::PGN_STR_EXAMPLE;
+        let metrics = super::collect_metrics(
+            pgn_str,
+            crate::compression::bincode_zlib::compress,
+            crate::compression::bincode_zlib::decompress,
+        );
+        assert_eq!(metrics.compressed_size, 403);
+        assert_eq!(metrics.decompressed_size, 744);
+    }
+}
