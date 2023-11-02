@@ -8,6 +8,9 @@ jobs:
     container:
       image:                    xd009642/tarpaulin:develop-nightly
       options:                  --security-opt seccomp=unconfined
+    defaults:
+      run:
+        working-directory:      ./cgn
     steps:
       - name:                   Checkout repository
         uses:                   actions/checkout@v2
