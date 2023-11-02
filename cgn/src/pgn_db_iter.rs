@@ -42,7 +42,7 @@ impl<R: BufRead> Iterator for PgnDBIter<R> {
                     // otherwise, add the line to the game
                     game.push_str(&self.buffer);
                 }
-                Err(_) => return None
+                Err(_) => return None,
             }
         }
 
@@ -68,34 +68,26 @@ mod tests {
 
     #[test]
     fn pgn_db_into_iter() {
-        let mut iter = super::pgn_db_into_iter(
-            &format!("{}{}", TEST_DBS_DIR, "exampleDB.pgn")
-        );
+        let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "exampleDB.pgn"));
         assert!(iter.next().is_some());
         assert!(iter.next().is_some());
     }
 
     #[test]
     fn none_on_empty_file() {
-        let mut iter = super::pgn_db_into_iter(
-            &format!("{}{}", TEST_DBS_DIR, "emptyDB.pgn")
-        );
+        let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "emptyDB.pgn"));
         assert!(iter.next().is_none());
     }
 
     #[test]
     fn none_on_non_utf8_file() {
-        let mut iter = super::pgn_db_into_iter(
-            &format!("{}{}", TEST_DBS_DIR, "nonUtf8DB.pgn")
-        );
+        let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "nonUtf8DB.pgn"));
         assert!(iter.next().is_none());
     }
 
     #[test]
     fn skip_empty_lines() {
-        let mut iter = super::pgn_db_into_iter(
-            &format!("{}{}", TEST_DBS_DIR, "emptyLinesDB.pgn")
-        );
+        let mut iter = super::pgn_db_into_iter(&format!("{}{}", TEST_DBS_DIR, "emptyLinesDB.pgn"));
         assert!(iter.next().is_some());
         assert!(iter.next().is_none());
     }

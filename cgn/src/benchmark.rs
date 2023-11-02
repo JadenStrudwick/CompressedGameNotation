@@ -68,7 +68,6 @@ fn collect_metrics(
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     #[test]
