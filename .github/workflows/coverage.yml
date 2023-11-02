@@ -3,7 +3,7 @@ name:                           Code Coverage
 on:                             [push]
 jobs:
   test:
-    name:                       coverage
+    name:                       Code Coverage
     runs-on:                    ubuntu-latest
     container:
       image:                    xd009642/tarpaulin:develop-nightly
