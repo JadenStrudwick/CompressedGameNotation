@@ -1,9 +1,6 @@
 # TODOS
 
 ## Features
-- [x] Only store the 7 tag roster information, not all headers. We only need the keys themselves, given the correct order.
-- [ ] Ensure we are in "reduced export format" (see below)
-- [x] Implement a PGN iterator
 - [ ] Set up benchmarking utilities
 
 ## Misc

@@ -42,7 +42,7 @@ impl<R: BufRead> Iterator for PgnDBIter<R> {
                     // otherwise, add the line to the game
                     game.push_str(&self.buffer);
                 }
-                Err(e) => panic!("Error reading line: {}", e),
+                Err(_) => return None
             }
         }
 
@@ -64,21 +64,39 @@ fn pgn_db_into_iter(path: &str) -> PgnDBIter<BufReader<File>> {
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_pgn_db_iter() {
-        // if the file is not found, pass the test (this is for CI)
-        let file = std::fs::File::open("./lichessDB.pgn");
-        match file {
-            Ok(file) => {
-                let reader = std::io::BufReader::new(file);
-                let iter = super::PgnDBIter::new(reader);
+    const TEST_DBS_DIR: &str = "./testDBs/";
 
-                // convert the first 100 games to PgnData
-                iter.take(100).for_each(|game| {
-                    crate::pgn_data::PgnData::from_str(&game);
-                });
-            }
-            Err(_) => (),
-        }
+    #[test]
+    fn pgn_db_into_iter() {
+        let mut iter = super::pgn_db_into_iter(
+            &format!("{}{}", TEST_DBS_DIR, "exampleDB.pgn")
+        );
+        assert!(iter.next().is_some());
+        assert!(iter.next().is_some());
+    }
+
+    #[test]
+    fn none_on_empty_file() {
+        let mut iter = super::pgn_db_into_iter(
+            &format!("{}{}", TEST_DBS_DIR, "emptyDB.pgn")
+        );
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn none_on_non_utf8_file() {
+        let mut iter = super::pgn_db_into_iter(
+            &format!("{}{}", TEST_DBS_DIR, "nonUtf8DB.pgn")
+        );
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn skip_empty_lines() {
+        let mut iter = super::pgn_db_into_iter(
+            &format!("{}{}", TEST_DBS_DIR, "emptyLinesDB.pgn")
+        );
+        assert!(iter.next().is_some());
+        assert!(iter.next().is_none());
     }
 }

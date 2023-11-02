@@ -67,3 +67,5 @@ fn collect_metrics(
         bits_per_move_excluding_headers,
     }
 }
+
+

@@ -95,4 +95,19 @@ mod tests {
         let pgn_data = super::PgnData::from_str(pgn_str);
         assert_eq!(pgn_str, pgn_data.to_string());
     }
+
+    #[test]
+    /// Tests if we can clear the headers from a PgnData struct.
+    fn can_clear_headers() {
+        let pgn_str = crate::pgn_examples::PGN_STR_EXAMPLE;
+        let mut pgn_data = super::PgnData::from_str(pgn_str);
+        pgn_data.clear_headers();
+        assert_eq!(pgn_data.event, "");
+        assert_eq!(pgn_data.site, "");
+        assert_eq!(pgn_data.date, "");
+        assert_eq!(pgn_data.round, "");
+        assert_eq!(pgn_data.white, "");
+        assert_eq!(pgn_data.black, "");
+        assert_eq!(pgn_data.result, "");
+    }
 }
