@@ -53,7 +53,7 @@ fn collect_metrics(
     let bits_per_move = (compressed_size * 8) as f64 / pgn_data.moves.len() as f64;
 
     // bits per move excluding headers
-    pgn_data.headers = Vec::new();
+    pgn_data.clear_headers();
     let compressed_data_no_headers = compress_fn(&pgn_data);
     let bits_per_move_excluding_headers =
         (compressed_data_no_headers.len() * 8) as f64 / pgn_data.moves.len() as f64;

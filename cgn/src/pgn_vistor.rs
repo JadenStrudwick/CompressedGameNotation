@@ -23,7 +23,17 @@ impl pgn_reader::Visitor for PgnVisitor {
     fn header(&mut self, _key: &[u8], _value: pgn_reader::RawHeader<'_>) {
         // convert the key and value to strings and add them to the headers vector
         if let (Ok(key), Ok(value)) = (String::from_utf8(_key.to_vec()), _value.decode_utf8()) {
-            self.data.headers.push((key, value.to_string()));
+            // match the key and set the corresponding field in the PgnData struct
+            match key.as_str() {
+                "Event" => self.data.event = value.to_string(),
+                "Site" => self.data.site = value.to_string(),
+                "Date" => self.data.date = value.to_string(),
+                "Round" => self.data.round = value.to_string(),
+                "White" => self.data.white = value.to_string(),
+                "Black" => self.data.black = value.to_string(),
+                "Result" => self.data.result = value.to_string(),
+                _ => (),
+            }
         }
     }
 

@@ -1,10 +1,9 @@
 # TODOS
 
 ## Features
-- [ ] Only store the 7 tag roster information, not all headers. We only need the keys themselves, given the correct order.
+- [x] Only store the 7 tag roster information, not all headers. We only need the keys themselves, given the correct order.
 - [ ] Ensure we are in "reduced export format" (see below)
 - [x] Implement a PGN iterator
-- [ ] Create variants of compress/decompress that strip comments/extra headers
 - [ ] Set up benchmarking utilities
 
 ## Misc
@@ -61,3 +60,13 @@ Because of this, I will be ensuring we are compressing to "reduced export format
 
 ## Key points from today
 - I cannot use the pgn_reader iterator, as it does not give me the original string of the game
+
+# 2nd of November 2023
+
+I have implemented my own iterator for the PGN parser. It parses each game, and returns the original string of the game.
+This is so we can accurately compute the compression ratio.
+
+Also I have changed the PgnData struct to only support 'reduced export format' PGNs. This means we only store the 7 tag roster information,
+no comments, no RAVs, no NAGs.
+
+This means we will have "lossy" compression, but we still capture all the vital information about a game.
