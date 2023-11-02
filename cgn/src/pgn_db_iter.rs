@@ -1,4 +1,7 @@
-use std::{fs::File, io::{BufRead, BufReader}};
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
 /// An iterator over the games in a PGN database file.
 struct PgnDBIter<R: BufRead> {

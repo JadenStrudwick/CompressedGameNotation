@@ -1,4 +1,4 @@
-use crate::pgn_data::PgnData; 
+use crate::pgn_data::PgnData;
 
 #[derive(Debug)]
 ///  Metrics for a compression strategy.
@@ -24,7 +24,11 @@ struct Metrics {
 /// * `decompress_fn` - The decompression function.
 /// # Returns
 /// The metrics for the compression strategy.
-fn collect_metrics(pgn_str: &str, compress_fn: fn(&PgnData) -> Vec<u8>, decompress_fn: fn(&[u8]) -> PgnData) -> Metrics {
+fn collect_metrics(
+    pgn_str: &str,
+    compress_fn: fn(&PgnData) -> Vec<u8>,
+    decompress_fn: fn(&[u8]) -> PgnData,
+) -> Metrics {
     let mut pgn_data = PgnData::from_str(pgn_str);
 
     // time to compress

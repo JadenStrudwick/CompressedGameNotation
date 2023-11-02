@@ -3,7 +3,7 @@
 ## Features
 - [ ] Only store the 7 tag roster information, not all headers. We only need the keys themselves, given the correct order.
 - [ ] Ensure we are in "reduced export format" (see below)
-- [ ] Implement a PGN iterator
+- [x] Implement a PGN iterator
 - [ ] Create variants of compress/decompress that strip comments/extra headers
 - [ ] Set up benchmarking utilities
 
@@ -58,3 +58,6 @@ These are apparently the rules for a MINIMAL PGN in "reduced export format"
 - it has no numeric annotation glyphs ("NAG", see below). Reduced export format is used for bulk storage of unannotated games. It represents a minimum level of standard conformance for a PGN exporting application.
 
 Because of this, I will be ensuring we are compressing to "reduced export format".
+
+## Key points from today
+- I cannot use the pgn_reader iterator, as it does not give me the original string of the game
