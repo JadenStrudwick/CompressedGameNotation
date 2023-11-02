@@ -4,7 +4,7 @@ use std::{
 };
 
 /// An iterator over the games in a PGN database file.
-struct PgnDBIter<R: BufRead> {
+pub struct PgnDBIter<R: BufRead> {
     reader: R,
     buffer: String,
 }
@@ -56,7 +56,7 @@ impl<R: BufRead> Iterator for PgnDBIter<R> {
 }
 
 /// Opens a PGN database file and returns an iterator over the games in the database.
-fn pgn_db_into_iter(path: &str) -> PgnDBIter<BufReader<File>> {
+pub fn pgn_db_into_iter(path: &str) -> PgnDBIter<BufReader<File>> {
     let file = File::open(path).expect("Failed to open file");
     let reader = BufReader::new(file);
     PgnDBIter::new(reader)

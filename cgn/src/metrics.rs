@@ -8,7 +8,7 @@ use crate::pgn_data::PgnData;
 /// * Size of compressed game (total bytes including headers)
 /// * Bits per move (total bits / number of moves)
 /// * Bits per move excluding headers (total move bits / number of moves)
-struct Metrics {
+pub struct Metrics {
     time_to_compress: u128,
     time_to_decompress: u128,
     compressed_size: usize,
@@ -81,5 +81,54 @@ mod tests {
         );
         assert_eq!(metrics.compressed_size, 403);
         assert_eq!(metrics.decompressed_size, 744);
+    }
+
+    #[test]
+    /// Test that metrics can be generated from multiple PGNs.
+    fn can_generate_metrics_multiple() {
+        const NUM_TO_COLLECT : usize = 1000;
+        let iter = crate::pgn_db_iter::pgn_db_into_iter("./lichessDB.pgn");
+
+        let mut avg_time_to_compress = 0;
+        let mut avg_time_to_decompress = 0;
+        let mut avg_compressed_size = 0;
+        let mut avg_decompressed_size = 0;
+        let mut avg_bits_per_move = 0.0;
+        let mut avg_bits_per_move_excluding_headers = 0.0;
+
+        for pgn_str in iter.take(NUM_TO_COLLECT) {
+            let met = super::collect_metrics(
+                &pgn_str,
+                crate::compression::bincode_zlib::compress,
+                crate::compression::bincode_zlib::decompress,
+            );
+            avg_time_to_compress += met.time_to_compress;
+            avg_time_to_decompress += met.time_to_decompress;
+            avg_compressed_size += met.compressed_size;
+            avg_decompressed_size += met.decompressed_size;
+            avg_bits_per_move += met.bits_per_move;
+            avg_bits_per_move_excluding_headers += met.bits_per_move_excluding_headers;
+        }
+
+        avg_time_to_compress /= NUM_TO_COLLECT as u128;
+        avg_time_to_decompress /= NUM_TO_COLLECT as u128;
+        avg_compressed_size /= NUM_TO_COLLECT;
+        avg_decompressed_size /= NUM_TO_COLLECT;
+        avg_bits_per_move /= NUM_TO_COLLECT as f64;
+        avg_bits_per_move_excluding_headers /= NUM_TO_COLLECT as f64;
+
+        println!("avg_time_to_compress: {:.3}", avg_time_to_compress);
+        println!("avg_time_to_decompress: {:.3}", avg_time_to_decompress);
+        println!("avg_compressed_size: {:.3}", avg_compressed_size);
+        println!("avg_decompressed_size: {:.3}", avg_decompressed_size);
+        println!("avg_bits_per_move: {:.3}", avg_bits_per_move);
+        println!(
+            "avg_bits_per_move_excluding_headers: {:.3}",
+            avg_bits_per_move_excluding_headers
+        );
+
+        // compression ratio
+        let compression_ratio = avg_compressed_size as f64 / avg_decompressed_size as f64; 
+        println!("compression_ratio: {:.3}", compression_ratio);
     }
 }
