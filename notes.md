@@ -69,3 +69,14 @@ I have also just finished setting up the code coverage tooling with tarpaulin an
 
 Currently there is approx 75% code coverage. The main areas not covered are benchmark.rs and lib.rs, as those are still under active development.
 
+I've made some progress on the benchmarking. Right now I am having issues with the bits per move calculations however. I believe this is due to some floating point error, or maybe some game messing with the calculations. I will have to investigate this further.
+
+# 3rd of November 2023
+
+I'm currently trying to set up the benchmarks, but I think I need to refactor the lib slightly.
+
+I've move the iterator into the benchmark utilies, as it is custom to the LichessDB format, and not useful to include as an export in my library.
+
+The utils also contain the metrics collection code required for the benchmarks.
+
+I've also cleaned up the pgn_data module, moving the vistor and sanpluswrapper into the module.

@@ -1,5 +1,5 @@
-use crate::pgn_data::PgnData;
-use crate::san_plus_wrapper::SanPlusWrapper;
+use super::PgnData;
+use super::san_plus_wrapper::SanPlusWrapper;
 
 /// A visitor that collects the data from a PGN file into a PgnData struct.
 pub struct PgnVisitor {
