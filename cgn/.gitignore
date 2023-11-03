@@ -3,3 +3,4 @@ Cargo.lock
 Cargo.toml.orig
 Cargo.lock.orig
 lichessDB.pgn
+lcov.info
