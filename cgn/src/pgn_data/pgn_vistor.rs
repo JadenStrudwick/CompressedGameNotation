@@ -1,5 +1,5 @@
-use super::PgnData;
 use super::san_plus_wrapper::SanPlusWrapper;
+use super::PgnData;
 
 /// A visitor that collects the data from a PGN file into a PgnData struct.
 pub struct PgnVisitor {

@@ -22,6 +22,7 @@ mod utils {
     use std::{
         fs::File,
         io::{BufRead, BufReader},
+        str::FromStr,
     };
 
     /// An iterator over the games in a PGN database file.
@@ -105,7 +106,7 @@ mod utils {
         compress_fn: fn(&PgnData) -> Vec<u8>,
         decompress_fn: fn(&[u8]) -> PgnData,
     ) -> Option<Metrics> {
-        let mut pgn_data = PgnData::from_str(pgn_str);
+        let mut pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
 
         // if the game is empty, skip it
         if pgn_data.moves.is_empty() {
@@ -155,7 +156,7 @@ mod utils {
         compress_fn: fn(&PgnData) -> Vec<u8>,
         decompress_fn: fn(&[u8]) -> PgnData,
     ) {
-        let metrics = pgn_db_into_iter("./lichessDB.pgn")
+        let metrics = pgn_db_into_iter("./benches/lichessDB.pgn")
             .take(num_to_collect)
             .map(|pgn_data| {
                 collect_single_metric(&pgn_data.to_string(), compress_fn, decompress_fn)

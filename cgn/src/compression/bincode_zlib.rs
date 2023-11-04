@@ -1,4 +1,5 @@
 use crate::pgn_data::PgnData;
+use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
 /// This strategy uses the bincode crate to serialize the data and
@@ -31,7 +32,7 @@ pub fn decompress_pgn_data(compressed_data: &[u8]) -> PgnData {
 /// The compressed PGN data.
 #[wasm_bindgen]
 pub fn compress_pgn_str(pgn_str: &str) -> Vec<u8> {
-    let pgn_data = PgnData::from_str(pgn_str);
+    let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
     compress_pgn_data(&pgn_data)
 }
 
@@ -48,6 +49,8 @@ pub fn decompress_pgn_str(compressed_data: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     /// Example PGN string.
     pub const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
 [Site ""]
@@ -66,14 +69,13 @@ Qd2 Bb4 29. c3 Be7 30. Nf2 dxc3 31. bxc3 Nd8 32. Bb1 Ne6 33. Nh3 Bc5 34. Ba2 Rd8
 Bxf7+ Kf8 42. Qxf2 Rxd1 43. Bxg6 Qd6 44. g5 Qd3 45. Qc5+ Qd6 46. Qc8+ Kg7 47.
 Qxb7+ Kf8 48. Qf7# 1-0"#;
 
-
     #[test]
     /// Test if the bincode Zlib compression is correct for PGN structs.
     fn bincode_zlib_pgn_data() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let pgn_data = super::PgnData::from_str(pgn_str);
-        let compressed_data = super::compress_pgn_data(&pgn_data);
-        let decompressed_data = super::decompress_pgn_data(&compressed_data);
+        let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
+        let compressed_data = compress_pgn_data(&pgn_data);
+        let decompressed_data = decompress_pgn_data(&compressed_data);
         let decompressed_pgn_str = decompressed_data.to_string();
         assert_eq!(pgn_str, decompressed_pgn_str);
     }
@@ -82,8 +84,8 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Test if the bincode Zlib compression is correct for PGN strings.
     fn bincode_zlib_pgn_str() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let compressed_data = super::compress_pgn_str(pgn_str);
-        let decompressed_pgn_str = super::decompress_pgn_str(&compressed_data);
+        let compressed_data = compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = decompress_pgn_str(&compressed_data);
         assert_eq!(pgn_str, decompressed_pgn_str);
-    } 
+    }
 }

@@ -1,4 +1,3 @@
-
 mod pgn_vistor;
 mod san_plus_wrapper;
 
@@ -36,15 +35,6 @@ impl PgnData {
         }
     }
 
-    /// Creates a new PgnData struct from a string.
-    pub fn from_str(s: &str) -> PgnData {
-        let mut visitor = pgn_vistor::PgnVisitor::new();
-        pgn_reader::BufferedReader::new_cursor(&s)
-            .read_game(&mut visitor)
-            .expect("Failed to read PGN game")
-            .expect("Failed to read PGN game")
-    }
-
     /// Clear headers from the PgnData struct.
     pub fn clear_headers(&mut self) {
         self.event.clear();
@@ -54,6 +44,26 @@ impl PgnData {
         self.white.clear();
         self.black.clear();
         self.result.clear();
+    }
+}
+
+impl Default for PgnData {
+    /// Creates a new empty PgnData struct.
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl std::str::FromStr for PgnData {
+    type Err = String;
+
+    /// Parses a PGN string into a PgnData struct.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut visitor = pgn_vistor::PgnVisitor::new();
+        pgn_reader::BufferedReader::new_cursor(&s)
+            .read_game(&mut visitor)
+            .map_err(|e| e.to_string())?
+            .ok_or("Failed to read PGN game".to_string())
     }
 }
 
@@ -90,6 +100,9 @@ impl std::fmt::Display for PgnData {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use std::str::FromStr;
+
     /// Example PGN string.
     const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
 [Site ""]
@@ -126,13 +139,12 @@ Qd2 Bb4 29. c3 Be7 30. Nf2 dxc3 31. bxc3 Nd8 32. Bb1 Ne6 33. Nh3 Bc5 34. Ba2 Rd8
 35. Qe2 Nf4+ 36. Nxf4 gxf4 37. Kh3 g6 38. Rd1 Rcd7 39. Rxd7 Rxd7 40. Rd1 Bf2 41.
 Bxf7+ Kf8 42. Qxf2 Rxd1 43. Bxg6 Qd6 44. g5 Qd3 45. Qc5+ Qd6 46. Qc8+ Kg7 47.
 Qxb7+ Kf8 48. Qf7# 1-0"#;
-    
 
     #[test]
     /// Tests if the PgnData struct can be parsed and then converted back to a string.
     fn parsed_eq_original() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let pgn_data = super::PgnData::from_str(pgn_str);
+        let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
         assert_eq!(pgn_str, pgn_data.to_string());
     }
 
@@ -140,7 +152,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Tests if we can clear the headers from a PgnData struct.
     fn can_clear_headers() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let mut pgn_data = super::PgnData::from_str(pgn_str);
+        let mut pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
         pgn_data.clear_headers();
         assert_eq!(pgn_data.event, "");
         assert_eq!(pgn_data.site, "");
@@ -155,7 +167,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Tests if additional headers are ignored when parsing a PGN string.
     fn ignores_additional_headers() {
         let pgn_str = PGN_STR_EXAMPLE_EXTRA_HEADER;
-        let pgn_data = super::PgnData::from_str(pgn_str);
+        let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
         assert!(pgn_data.to_string().find("FOOBAR").is_none());
     }
 }
