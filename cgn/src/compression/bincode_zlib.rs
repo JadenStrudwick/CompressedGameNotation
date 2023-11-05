@@ -1,4 +1,5 @@
 use crate::pgn_data::PgnData;
+use anyhow::Result;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
@@ -7,22 +8,22 @@ use wasm_bindgen::prelude::*;
 /// best compression level.
 
 /// Compresses the PGN data using bincode and ZlibEncoder at the maximum compression level.
-pub fn compress_pgn_data(pgn_data: &PgnData) -> Vec<u8> {
+pub fn compress_pgn_data(pgn_data: &PgnData) -> Result<Vec<u8>> {
     // create a buffer to store the compressed data and a ZlibEncoder
     let mut compressed_data = Vec::new();
     let mut encoder =
         flate2::write::ZlibEncoder::new(&mut compressed_data, flate2::Compression::best());
 
     // serialize the data into the encoder and finish the compression
-    bincode::serialize_into(&mut encoder, pgn_data).expect("Failed to serialize PGN data");
-    encoder.finish().expect("Failed to compress PGN data");
-    compressed_data
+    bincode::serialize_into(&mut encoder, pgn_data)?;
+    encoder.finish()?;
+    Ok(compressed_data)
 }
 
 /// Decompresses the PGN data using bincode and ZlibDecoder.
-pub fn decompress_pgn_data(compressed_data: &[u8]) -> PgnData {
+pub fn decompress_pgn_data(compressed_data: &[u8]) -> Result<PgnData> {
     let mut decoder = flate2::read::ZlibDecoder::new(compressed_data);
-    bincode::deserialize_from(&mut decoder).expect("Failed to deserialize PGN data")
+    Ok(bincode::deserialize_from(&mut decoder)?)
 }
 
 /// Compresses the PGN string using bincode and ZlibEncoder at the maximum compression level.
@@ -32,8 +33,17 @@ pub fn decompress_pgn_data(compressed_data: &[u8]) -> PgnData {
 /// The compressed PGN data.
 #[wasm_bindgen]
 pub fn compress_pgn_str(pgn_str: &str) -> Vec<u8> {
-    let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
-    compress_pgn_data(&pgn_data)
+    // if pgn_data is invalid, return an empty vector
+    let pgn_data = match PgnData::from_str(pgn_str) {
+        Ok(pgn_data) => pgn_data,
+        Err(_) => return Vec::new(),
+    };
+
+    // compress the data and return the result
+    match compress_pgn_data(&pgn_data) {
+        Ok(compressed_data) => compressed_data,
+        Err(_) => Vec::new(),
+    }
 }
 
 /// Decompresses the PGN string using bincode and ZlibDecoder.
@@ -43,8 +53,10 @@ pub fn compress_pgn_str(pgn_str: &str) -> Vec<u8> {
 /// The decompressed PGN string.
 #[wasm_bindgen]
 pub fn decompress_pgn_str(compressed_data: &[u8]) -> String {
-    let pgn_data = decompress_pgn_data(compressed_data);
-    pgn_data.to_string()
+    match decompress_pgn_data(compressed_data) {
+        Ok(pgn_data) => pgn_data.to_string(),
+        Err(_) => String::new(),
+    }
 }
 
 #[cfg(test)]
@@ -73,9 +85,9 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Test if the bincode Zlib compression is correct for PGN structs.
     fn bincode_zlib_pgn_data() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
-        let compressed_data = compress_pgn_data(&pgn_data);
-        let decompressed_data = decompress_pgn_data(&compressed_data);
+        let pgn_data = PgnData::from_str(pgn_str).unwrap();
+        let compressed_data = compress_pgn_data(&pgn_data).unwrap();
+        let decompressed_data = decompress_pgn_data(&compressed_data).unwrap();
         let decompressed_pgn_str = decompressed_data.to_string();
         assert_eq!(pgn_str, decompressed_pgn_str);
     }

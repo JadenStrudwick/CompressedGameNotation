@@ -18,6 +18,7 @@ criterion_group!(benches, bench_bincode_zlib);
 criterion_main!(benches);
 
 mod utils {
+    use anyhow::Result;
     use cgn::PgnData;
     use std::{
         fs::File,
@@ -78,10 +79,10 @@ mod utils {
     }
 
     /// Opens a PGN database file and returns an iterator over the games in the database.
-    fn pgn_db_into_iter(path: &str) -> PgnDBIter<BufReader<File>> {
-        let file = File::open(path).expect("Failed to open file");
+    fn pgn_db_into_iter(path: &str) -> Result<PgnDBIter<BufReader<File>>, std::io::Error> {
+        let file = File::open(path)?;
         let reader = BufReader::new(file);
-        PgnDBIter::new(reader)
+        Ok(PgnDBIter::new(reader))
     }
 
     ///  Metrics for a compression strategy.
@@ -103,19 +104,19 @@ mod utils {
     /// Collect a single metric for a compression strategy.
     fn collect_single_metric(
         pgn_str: &str,
-        compress_fn: fn(&PgnData) -> Vec<u8>,
-        decompress_fn: fn(&[u8]) -> PgnData,
-    ) -> Option<Metrics> {
-        let mut pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
+        compress_fn: fn(&PgnData) -> Result<Vec<u8>>,
+        decompress_fn: fn(&[u8]) -> Result<PgnData>,
+    ) -> Result<Metrics> {
+        let mut pgn_data = PgnData::from_str(pgn_str)?;
 
         // if the game is empty, skip it
         if pgn_data.moves.is_empty() {
-            return None;
+            return Err(anyhow::anyhow!("Game is empty"));
         }
 
         // time to compress
         let start = std::time::Instant::now();
-        let compressed_data = compress_fn(&pgn_data);
+        let compressed_data = compress_fn(&pgn_data)?;
         let end = std::time::Instant::now();
         let time_to_compress = end.duration_since(start).as_nanos();
 
@@ -124,7 +125,7 @@ mod utils {
 
         // time to decompress
         let start = std::time::Instant::now();
-        let decompressed_data = decompress_fn(&compressed_data);
+        let decompressed_data = decompress_fn(&compressed_data)?;
         let end = std::time::Instant::now();
         let time_to_decompress = end.duration_since(start).as_nanos();
 
@@ -136,11 +137,11 @@ mod utils {
 
         // bits per move excluding headers
         pgn_data.clear_headers();
-        let compressed_data_no_headers = compress_fn(&pgn_data);
+        let compressed_data_no_headers = compress_fn(&pgn_data)?;
         let bits_per_move_excluding_headers =
             (compressed_data_no_headers.len() * 8) as f64 / pgn_data.moves.len() as f64;
 
-        Some(Metrics {
+        Ok(Metrics {
             time_to_compress,
             time_to_decompress,
             compressed_size,
@@ -153,15 +154,16 @@ mod utils {
     /// Collect the metrics for a compression strategy.
     pub fn collect_metrics(
         num_to_collect: usize,
-        compress_fn: fn(&PgnData) -> Vec<u8>,
-        decompress_fn: fn(&[u8]) -> PgnData,
+        compress_fn: fn(&PgnData) -> Result<Vec<u8>>,
+        decompress_fn: fn(&[u8]) -> Result<PgnData>,
     ) {
         let metrics = pgn_db_into_iter("./benches/lichessDB.pgn")
+            .expect("Failed to open PGN database file")
             .take(num_to_collect)
             .map(|pgn_data| {
                 collect_single_metric(&pgn_data.to_string(), compress_fn, decompress_fn)
             })
-            .filter_map(|x| x)
+            .filter_map(|x| x.ok())
             .collect::<Vec<_>>();
 
         // compute averages

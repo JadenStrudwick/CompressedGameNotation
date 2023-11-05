@@ -55,15 +55,17 @@ impl Default for PgnData {
 }
 
 impl std::str::FromStr for PgnData {
-    type Err = String;
+    type Err = std::io::Error;
 
     /// Parses a PGN string into a PgnData struct.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut visitor = pgn_vistor::PgnVisitor::new();
         pgn_reader::BufferedReader::new_cursor(&s)
-            .read_game(&mut visitor)
-            .map_err(|e| e.to_string())?
-            .ok_or("Failed to read PGN game".to_string())
+            .read_game(&mut visitor)?
+            .ok_or(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Failed to read PGN game from string",
+            ))
     }
 }
 
@@ -144,7 +146,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Tests if the PgnData struct can be parsed and then converted back to a string.
     fn parsed_eq_original() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
+        let pgn_data = PgnData::from_str(pgn_str).unwrap();
         assert_eq!(pgn_str, pgn_data.to_string());
     }
 
@@ -152,7 +154,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Tests if we can clear the headers from a PgnData struct.
     fn can_clear_headers() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let mut pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
+        let mut pgn_data = PgnData::from_str(pgn_str).unwrap();
         pgn_data.clear_headers();
         assert_eq!(pgn_data.event, "");
         assert_eq!(pgn_data.site, "");
@@ -167,7 +169,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Tests if additional headers are ignored when parsing a PGN string.
     fn ignores_additional_headers() {
         let pgn_str = PGN_STR_EXAMPLE_EXTRA_HEADER;
-        let pgn_data = PgnData::from_str(pgn_str).expect("Failed to parse PGN string");
+        let pgn_data = PgnData::from_str(pgn_str).unwrap();
         assert!(pgn_data.to_string().find("FOOBAR").is_none());
     }
 }

@@ -22,9 +22,9 @@ impl<'de> Deserialize<'de> for SanPlusWrapper {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer).expect("Failed to deserialize SanPlusWrapper");
+        let s = String::deserialize(deserializer)?;
         Ok(SanPlusWrapper(
-            pgn_reader::SanPlus::from_str(&s).expect("Failed to parse SanPlus"),
+            SanPlus::from_str(&s).map_err(serde::de::Error::custom)?,
         ))
     }
 }
