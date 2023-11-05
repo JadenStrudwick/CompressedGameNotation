@@ -186,12 +186,12 @@ mod utils {
 
         println!("\tNumber of games benchmarked against: {}", metrics.len());
         println!(
-            "\tAverage time to compress: {} nanoseconds",
-            avg_time_to_compress
+            "\tAverage time to compress: {} seconds",
+            avg_time_to_compress as f64 / 1_000_000_000.0
         );
         println!(
-            "\tAverage time to decompress: {} nanoseconds",
-            avg_time_to_decompress
+            "\tAverage time to decompress: {} seconds",
+            avg_time_to_decompress as f64 / 1_000_000_000.0
         );
         println!("\tAverage compressed size: {} bytes", avg_compressed_size);
         println!(
