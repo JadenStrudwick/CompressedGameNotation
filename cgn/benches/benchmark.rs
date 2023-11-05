@@ -1,14 +1,10 @@
 use cgn::bincode_zlib;
 use criterion::{criterion_group, criterion_main, Criterion};
 
-// Number of games to collect metrics for
-const NUM_TO_COLLECT: usize = 10000;
-
 /// Collects and prints metrics for the bincode_zlib compression strategy.
 fn bench_bincode_zlib(_c: &mut Criterion) {
     println!("[BENCHMARK] Collecting metrics for bincode_zlib...");
     utils::collect_metrics(
-        NUM_TO_COLLECT,
         bincode_zlib::compress_pgn_data,
         bincode_zlib::decompress_pgn_data,
     );
@@ -20,6 +16,7 @@ criterion_main!(benches);
 mod utils {
     use anyhow::Result;
     use cgn::PgnData;
+    use rayon::prelude::*;
     use std::{
         fs::File,
         io::{BufRead, BufReader},
@@ -153,18 +150,17 @@ mod utils {
 
     /// Collect the metrics for a compression strategy.
     pub fn collect_metrics(
-        num_to_collect: usize,
         compress_fn: fn(&PgnData) -> Result<Vec<u8>>,
         decompress_fn: fn(&[u8]) -> Result<PgnData>,
     ) {
+        let start = std::time::Instant::now();
         let metrics = pgn_db_into_iter("./benches/lichessDB.pgn")
             .expect("Failed to open PGN database file")
-            .take(num_to_collect)
-            .map(|pgn_data| {
-                collect_single_metric(&pgn_data.to_string(), compress_fn, decompress_fn)
-            })
+            .par_bridge()
+            .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
             .filter_map(|x| x.ok())
             .collect::<Vec<_>>();
+        let end = std::time::Instant::now();
 
         // compute averages
         let avg_time_to_compress =
@@ -185,6 +181,10 @@ mod utils {
         let compression_ratio = avg_compressed_size as f64 / avg_decompressed_size as f64;
 
         println!("\tNumber of games benchmarked against: {}", metrics.len());
+        println!(
+            "\tTotal time to benchmark: {} seconds",
+            end.duration_since(start).as_nanos() as f64 / 1_000_000_000.0
+        );
         println!(
             "\tAverage time to compress: {} seconds",
             avg_time_to_compress as f64 / 1_000_000_000.0
