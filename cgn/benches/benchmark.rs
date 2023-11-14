@@ -1,4 +1,4 @@
-use cgn::bincode_zlib;
+use cgn::compression::bincode_zlib;
 use criterion::{criterion_group, criterion_main, Criterion};
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
@@ -15,7 +15,7 @@ criterion_main!(benches);
 
 mod utils {
     use anyhow::Result;
-    use cgn::PgnData;
+    use cgn::pgn_data::PgnData;
     use rayon::prelude::*;
     use std::{
         fs::File,

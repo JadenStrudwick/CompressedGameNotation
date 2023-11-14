@@ -1,4 +1,4 @@
-use crate::pgn_data::PgnData;
+use crate::{export_to_wasm, pgn_data::PgnData};
 use anyhow::Result;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
@@ -26,38 +26,8 @@ pub fn decompress_pgn_data(compressed_data: &[u8]) -> Result<PgnData> {
     Ok(bincode::deserialize_from(&mut decoder)?)
 }
 
-/// Compresses the PGN string using bincode and ZlibEncoder at the maximum compression level.
-/// # Arguments
-/// * `pgn_str` - The PGN string.
-/// # Returns
-/// The compressed PGN data.
-#[wasm_bindgen]
-pub fn compress_pgn_str(pgn_str: &str) -> Vec<u8> {
-    // if pgn_data is invalid, return an empty vector
-    let pgn_data = match PgnData::from_str(pgn_str) {
-        Ok(pgn_data) => pgn_data,
-        Err(_) => return Vec::new(),
-    };
-
-    // compress the data and return the result
-    match compress_pgn_data(&pgn_data) {
-        Ok(compressed_data) => compressed_data,
-        Err(_) => Vec::new(),
-    }
-}
-
-/// Decompresses the PGN string using bincode and ZlibDecoder.
-/// # Arguments
-/// * `compressed_data` - The compressed PGN string.
-/// # Returns
-/// The decompressed PGN string.
-#[wasm_bindgen]
-pub fn decompress_pgn_str(compressed_data: &[u8]) -> String {
-    match decompress_pgn_data(compressed_data) {
-        Ok(pgn_data) => pgn_data.to_string(),
-        Err(_) => String::new(),
-    }
-}
+// Wrap the functions in a macro for export to WASM.
+export_to_wasm!(self);
 
 #[cfg(test)]
 mod tests {
