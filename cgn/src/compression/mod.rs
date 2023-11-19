@@ -1,5 +1,6 @@
 // Put all compression modules here for export to root lib.rs.
 pub mod bincode_zlib;
+pub mod huffman;
 
 /// Accepts a module that contains the following and exports them to WASM string versions.
 /// * compress_pgn_data(&PgnData) -> Result<Vec<u8>>.
