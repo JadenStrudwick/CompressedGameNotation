@@ -1,22 +1,22 @@
-use shakmaty::{Chess, Move, Role, Position, attacks::pawn_attacks, Piece, Square, Color};
+use shakmaty::{attacks::pawn_attacks, Chess, Color, Move, Piece, Position, Role, Square};
 
 type PieceScore = i32;
 
 pub fn move_score(pos: &Chess, m: &Move) -> PieceScore {
-    let promotion_score = promotion_score(m); 
-    let capture_score = capture_score(m); 
-    let pawn_defense_score = pawn_defense_score(pos, m); 
+    let promotion_score = promotion_score(m);
+    let capture_score = capture_score(m);
+    let pawn_defense_score = pawn_defense_score(pos, m);
     let move_value = move_pst_score(pos.turn(), m);
 
     let to_value = PieceScore::from(m.to());
     let from_value = PieceScore::from(m.from().expect("No from square"));
 
-    (promotion_score << 26) +
-    (capture_score << 25) +
-    (pawn_defense_score << 24) +
-    (move_value << 12) +
-    (to_value << 6) +
-    from_value
+    (promotion_score << 26)
+        + (capture_score << 25)
+        + (pawn_defense_score << 24)
+        + (move_value << 12)
+        + (to_value << 6)
+        + from_value
 }
 
 /// Calculate the score for a move that promotes a pawn
@@ -146,7 +146,7 @@ mod tests {
             to: Square::B8,
             capture: None,
             promotion: Some(Role::Knight),
-        }; 
+        };
         assert_eq!(promotion_score(&m), 1);
     }
 
@@ -159,7 +159,7 @@ mod tests {
             to: Square::B8,
             capture: None,
             promotion: Some(Role::Bishop),
-        }; 
+        };
         assert_eq!(promotion_score(&m), 2);
     }
 
@@ -172,7 +172,7 @@ mod tests {
             to: Square::B8,
             capture: None,
             promotion: Some(Role::Rook),
-        }; 
+        };
         assert_eq!(promotion_score(&m), 3);
     }
 
@@ -185,7 +185,7 @@ mod tests {
             to: Square::B8,
             capture: None,
             promotion: Some(Role::Queen),
-        }; 
+        };
         assert_eq!(promotion_score(&m), 4);
     }
 
@@ -198,7 +198,7 @@ mod tests {
             to: Square::B8,
             capture: Some(Role::Knight),
             promotion: None,
-        }; 
+        };
         assert_eq!(capture_score(&m), 1);
     }
 
@@ -211,7 +211,7 @@ mod tests {
             to: Square::B8,
             capture: None,
             promotion: None,
-        }; 
+        };
         assert_eq!(capture_score(&m), 0);
     }
 
@@ -225,7 +225,7 @@ mod tests {
             to: Square::A4,
             capture: None,
             promotion: None,
-        }; 
+        };
         let pos = pos.play(&white_move).expect("Move is illegal");
         let black_move = Move::Normal {
             role: Role::Pawn,
@@ -247,8 +247,11 @@ mod tests {
             to: Square::B4,
             capture: None,
             promotion: None,
-        }; 
-        assert_eq!(pst_score(m.role().of(pos.turn()), m.from().expect("No from square")), 10);
+        };
+        assert_eq!(
+            pst_score(m.role().of(pos.turn()), m.from().expect("No from square")),
+            10
+        );
     }
 
     #[test]
@@ -261,8 +264,7 @@ mod tests {
             to: Square::B3,
             capture: None,
             promotion: None,
-        }; 
+        };
         assert_eq!(move_pst_score(pos.turn(), &m), 512 - 5 - 10);
     }
-
 }

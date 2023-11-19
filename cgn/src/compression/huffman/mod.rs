@@ -24,7 +24,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_generate_legal_moves() { 
+    fn test_generate_legal_moves() {
         let pos = Chess::default();
         let moves = generate_legal_moves(&pos);
         assert_eq!(moves.len(), 20);
