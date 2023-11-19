@@ -255,6 +255,31 @@ mod tests {
     }
 
     #[test]
+    /// Tests that the pst score for a black pawn on B7 is 10
+    fn black_pawn_pst_score_test() {
+        let pos = Chess::default();
+        let white_move = Move::Normal {
+            role: Role::Pawn,
+            from: Square::A2,
+            to: Square::A4,
+            capture: None,
+            promotion: None,
+        };
+        let pos = pos.play(&white_move).expect("Move is illegal");
+        let black_move = Move::Normal {
+            role: Role::Pawn,
+            from: Square::B7,
+            to: Square::B5,
+            capture: None,
+            promotion: None,
+        };
+        assert_eq!(
+            pst_score(black_move.role().of(pos.turn()), black_move.from().expect("No from square")),
+            10
+        );
+    }
+
+    #[test]
     /// Tests that the pst score for a white pawn move from B2 to B3 is 512 + (-5) - (10)
     fn white_pawn_move_pst_score_test() {
         let pos = Chess::default();
