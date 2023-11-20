@@ -25,13 +25,13 @@ impl pgn_reader::Visitor for PgnVisitor {
         if let (Ok(key), Ok(value)) = (String::from_utf8(_key.to_vec()), _value.decode_utf8()) {
             // match the key and set the corresponding field in the PgnData struct
             match key.as_str() {
-                "Event" => self.data.event = value.to_string(),
-                "Site" => self.data.site = value.to_string(),
-                "Date" => self.data.date = value.to_string(),
-                "Round" => self.data.round = value.to_string(),
-                "White" => self.data.white = value.to_string(),
-                "Black" => self.data.black = value.to_string(),
-                "Result" => self.data.result = value.to_string(),
+                "Event" => self.data.headers.event = value.to_string(),
+                "Site" => self.data.headers.site = value.to_string(),
+                "Date" => self.data.headers.date = value.to_string(),
+                "Round" => self.data.headers.round = value.to_string(),
+                "White" => self.data.headers.white = value.to_string(),
+                "Black" => self.data.headers.black = value.to_string(),
+                "Result" => self.data.headers.result = value.to_string(),
                 _ => (),
             }
         }

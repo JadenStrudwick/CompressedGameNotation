@@ -2,6 +2,34 @@ mod pgn_vistor;
 mod san_plus_wrapper;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+/// PGN headers struct that holds the headers of a PGN game.
+/// Only stores the data required for PGN 'reduced export format'.
+pub struct PgnHeaders {
+    pub event: String,
+    pub site: String,
+    pub date: String,
+    pub round: String,
+    pub white: String,
+    pub black: String,
+    pub result: String,
+}
+
+impl PgnHeaders {
+    /// Creates a new empty PgnHeaders struct.
+    pub fn new() -> PgnHeaders {
+        PgnHeaders {
+            event: String::new(),
+            site: String::new(),
+            date: String::new(),
+            round: String::new(),
+            white: String::new(),
+            black: String::new(),
+            result: String::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 /// PGN data struct that holds the headers and moves of a PGN game.
 /// Only stores the data required for PGN 'reduced export format'.
 /// A PGN game is in 'reduced export format' if abide by the following rules:
@@ -10,13 +38,7 @@ mod san_plus_wrapper;
 /// 3) There are no recursive annotations.
 /// 4) There are no numeric annotation glyphs.
 pub struct PgnData {
-    pub event: String,
-    pub site: String,
-    pub date: String,
-    pub round: String,
-    pub white: String,
-    pub black: String,
-    pub result: String,
+    pub headers: PgnHeaders,
     pub moves: Vec<san_plus_wrapper::SanPlusWrapper>,
 }
 
@@ -24,26 +46,14 @@ impl PgnData {
     /// Creates a new empty PgnData struct.
     pub fn new() -> PgnData {
         PgnData {
-            event: String::new(),
-            site: String::new(),
-            date: String::new(),
-            round: String::new(),
-            white: String::new(),
-            black: String::new(),
-            result: String::new(),
+            headers: PgnHeaders::new(),
             moves: vec![],
         }
     }
 
     /// Clear headers from the PgnData struct.
     pub fn clear_headers(&mut self) {
-        self.event.clear();
-        self.site.clear();
-        self.date.clear();
-        self.round.clear();
-        self.white.clear();
-        self.black.clear();
-        self.result.clear();
+        self.headers = PgnHeaders::new();
     }
 }
 
@@ -74,13 +84,13 @@ impl std::fmt::Display for PgnData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Create a string buffer and write the headers to it
         let mut s = String::new();
-        s.push_str(&format!("[Event \"{}\"]\n", self.event));
-        s.push_str(&format!("[Site \"{}\"]\n", self.site));
-        s.push_str(&format!("[Date \"{}\"]\n", self.date));
-        s.push_str(&format!("[Round \"{}\"]\n", self.round));
-        s.push_str(&format!("[White \"{}\"]\n", self.white));
-        s.push_str(&format!("[Black \"{}\"]\n", self.black));
-        s.push_str(&format!("[Result \"{}\"]\n", self.result));
+        s.push_str(&format!("[Event \"{}\"]\n", self.headers.event));
+        s.push_str(&format!("[Site \"{}\"]\n", self.headers.site));
+        s.push_str(&format!("[Date \"{}\"]\n", self.headers.date));
+        s.push_str(&format!("[Round \"{}\"]\n", self.headers.round));
+        s.push_str(&format!("[White \"{}\"]\n", self.headers.white));
+        s.push_str(&format!("[Black \"{}\"]\n", self.headers.black));
+        s.push_str(&format!("[Result \"{}\"]\n", self.headers.result));
 
         // Write the moves to the string buffer
         s.push('\n');
@@ -93,7 +103,7 @@ impl std::fmt::Display for PgnData {
         }
 
         // Write the result to the string buffer
-        s.push_str(self.result.as_str());
+        s.push_str(self.headers.result.as_str());
 
         //  Wrap the string buffer to 80 characters and write it to the formatter
         write!(f, "{}", textwrap::fill(&s, 80))
@@ -156,13 +166,13 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let pgn_str = PGN_STR_EXAMPLE;
         let mut pgn_data = PgnData::from_str(pgn_str).unwrap();
         pgn_data.clear_headers();
-        assert_eq!(pgn_data.event, "");
-        assert_eq!(pgn_data.site, "");
-        assert_eq!(pgn_data.date, "");
-        assert_eq!(pgn_data.round, "");
-        assert_eq!(pgn_data.white, "");
-        assert_eq!(pgn_data.black, "");
-        assert_eq!(pgn_data.result, "");
+        assert_eq!(pgn_data.headers.event, "");
+        assert_eq!(pgn_data.headers.site, "");
+        assert_eq!(pgn_data.headers.date, "");
+        assert_eq!(pgn_data.headers.round, "");
+        assert_eq!(pgn_data.headers.white, "");
+        assert_eq!(pgn_data.headers.black, "");
+        assert_eq!(pgn_data.headers.result, "");
     }
 
     #[test]
