@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 pub use decoder::decompress_pgn_data;
 pub use encoder::compress_pgn_data;
 
-export_to_wasm!(self);
+export_to_wasm!("huffman", compress_pgn_data,decompress_pgn_data);
 
 #[cfg(test)]
 mod tests {
@@ -42,15 +42,6 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let compressed_data = compress_pgn_data(&pgn_data).unwrap();
         let decompressed_data = decompress_pgn_data(&compressed_data).unwrap();
         let decompressed_pgn_str = decompressed_data.to_string();
-        assert_eq!(pgn_str, decompressed_pgn_str);
-    }
-
-    #[test]
-    /// Test if the compression is correct for PGN strings.
-    fn test_compress_pgn_str() {
-        let pgn_str = PGN_STR_EXAMPLE;
-        let compressed_data = compress_pgn_str(pgn_str);
-        let decompressed_pgn_str = decompress_pgn_str(&compressed_data);
         assert_eq!(pgn_str, decompressed_pgn_str);
     }
 

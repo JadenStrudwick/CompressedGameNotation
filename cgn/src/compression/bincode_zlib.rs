@@ -29,7 +29,7 @@ pub fn decompress_pgn_data(compressed_data: &BitVec) -> Result<PgnData> {
 }
 
 // Wrap the functions in a macro for export to WASM.
-export_to_wasm!(self);
+export_to_wasm!("bincode", compress_pgn_data, decompress_pgn_data);
 
 #[cfg(test)]
 mod tests {
@@ -61,15 +61,6 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let compressed_data = compress_pgn_data(&pgn_data).unwrap();
         let decompressed_data = decompress_pgn_data(&compressed_data).unwrap();
         let decompressed_pgn_str = decompressed_data.to_string();
-        assert_eq!(pgn_str, decompressed_pgn_str);
-    }
-
-    #[test]
-    /// Test if the bincode Zlib compression is correct for PGN strings.
-    fn bincode_zlib_pgn_str() {
-        let pgn_str = PGN_STR_EXAMPLE;
-        let compressed_data = compress_pgn_str(pgn_str);
-        let decompressed_pgn_str = decompress_pgn_str(&compressed_data);
         assert_eq!(pgn_str, decompressed_pgn_str);
     }
 }
