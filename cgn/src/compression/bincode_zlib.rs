@@ -1,5 +1,6 @@
 use crate::{export_to_wasm, pgn_data::PgnData};
 use anyhow::Result;
+use bit_vec::BitVec;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
@@ -8,7 +9,7 @@ use wasm_bindgen::prelude::*;
 /// best compression level.
 
 /// Compresses the PGN data using bincode and ZlibEncoder at the maximum compression level.
-pub fn compress_pgn_data(pgn_data: &PgnData) -> Result<Vec<u8>> {
+pub fn compress_pgn_data(pgn_data: &PgnData) -> Result<BitVec> {
     // create a buffer to store the compressed data and a ZlibEncoder
     let mut compressed_data = Vec::new();
     let mut encoder =
@@ -17,12 +18,13 @@ pub fn compress_pgn_data(pgn_data: &PgnData) -> Result<Vec<u8>> {
     // serialize the data into the encoder and finish the compression
     bincode::serialize_into(&mut encoder, pgn_data)?;
     encoder.finish()?;
-    Ok(compressed_data)
+    Ok(BitVec::from_bytes(&compressed_data))
 }
 
 /// Decompresses the PGN data using bincode and ZlibDecoder.
-pub fn decompress_pgn_data(compressed_data: &[u8]) -> Result<PgnData> {
-    let mut decoder = flate2::read::ZlibDecoder::new(compressed_data);
+pub fn decompress_pgn_data(compressed_data: &BitVec) -> Result<PgnData> {
+    let compressed_data_bytes = compressed_data.to_bytes();
+    let mut decoder = flate2::read::ZlibDecoder::new(compressed_data_bytes.as_slice());
     Ok(bincode::deserialize_from(&mut decoder)?)
 }
 
