@@ -2,6 +2,7 @@
 
 ## Features
 - [ ] Set up benchmarking utilities
+- [ ] Check comment style
 
 # 31st of October 2023
 
@@ -80,3 +81,11 @@ I've move the iterator into the benchmark utilies, as it is custom to the Liches
 The utils also contain the metrics collection code required for the benchmarks.
 
 I've also cleaned up the pgn_data module, moving the vistor and sanpluswrapper into the module.
+
+# 21st of November 2023
+
+I've been working on the new encoding scheme inspired by Lichess.
+
+Major refactor decision is to use BitVec instead of byte arrays for my compressed data. This saves us from any wasted padding bytes.
+
+I NEED TO CHECK MY COMMENTS OVER
