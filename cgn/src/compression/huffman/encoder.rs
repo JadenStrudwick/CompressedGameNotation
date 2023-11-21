@@ -11,7 +11,7 @@ use flate2::{write::ZlibEncoder, Compression};
 /// Converts an i8 to a bit vector of length 8
 fn i8_to_bit_vec(i: i8) -> BitVec {
     let mut bit_vec = BitVec::new();
-    for j in 0..8 {
+    for j in (0..8).rev() {
         bit_vec.push((i >> j) & 1 == 1);
     }
     bit_vec
@@ -116,6 +116,45 @@ Qd2 Bb4 29. c3 Be7 30. Nf2 dxc3 31. bxc3 Nd8 32. Bb1 Ne6 33. Nh3 Bc5 34. Ba2 Rd8
 35. Qe2 Nf4+ 36. Nxf4 gxf4 37. Kh3 g6 38. Rd1 Rcd7 39. Rxd7 Rxd7 40. Rd1 Bf2 41.
 Bxf7+ Kf8 42. Qxf2 Rxd1 43. Bxg6 Qd6 44. g5 Qd3 45. Qc5+ Qd6 46. Qc8+ Kg7 47.
 Qxb7+ Kf8 48. Qf7# 1-0"#;
+
+    #[test]
+    /// Tests that we can convert a 0 i8 to a bit vector
+    fn test_i8_to_bit_vec_0() {
+        let x = 0 as i8;
+        let mut expected = BitVec::new();
+        for _ in 0..8 {
+            expected.push(false);
+        }
+        assert_eq!(i8_to_bit_vec(x), expected);
+    }
+
+    #[test]
+    /// Tests that we can convert a 1 i8 to a bit vector
+    fn test_i8_to_bit_vec_1() {
+        let x = 1 as i8;
+        let mut expected = BitVec::new();
+        for _ in 0..7 {
+            expected.push(false);
+        }
+        expected.push(true);
+        assert_eq!(i8_to_bit_vec(x), expected);
+    }
+
+    #[test]
+    /// Tests that we can convert a 10 i8 to a bit vector
+    fn test_i8_to_bit_vec_10() {
+        let x = 10 as i8;
+        let mut expected = BitVec::new();
+        expected.push(false); // 0
+        expected.push(false); // 0
+        expected.push(false); // 0
+        expected.push(false); // 0
+        expected.push(true); // 1
+        expected.push(false); // 0
+        expected.push(true); // 1
+        expected.push(false); // 0
+        assert_eq!(i8_to_bit_vec(x), expected);
+    }
 
     #[test]
     /// Tests that we can encode the headers of a game
