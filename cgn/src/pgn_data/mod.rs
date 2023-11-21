@@ -17,7 +17,7 @@ pub struct PgnHeaders {
 }
 
 impl PgnHeaders {
-    /// Creates a new empty PgnHeaders struct.
+    /// Creates a new empty PgnHeaders struct
     pub fn new() -> PgnHeaders {
         PgnHeaders {
             event: String::new(),
@@ -30,7 +30,7 @@ impl PgnHeaders {
         }
     }
 
-    // Checks if the PgnHeaders struct is empty.
+    // Checks if the PgnHeaders struct is empty
     pub fn is_empty(&self) -> bool {
         self.event.is_empty()
             && self.site.is_empty()
@@ -39,6 +39,13 @@ impl PgnHeaders {
             && self.white.is_empty()
             && self.black.is_empty()
             && self.result.is_empty()
+    }
+}
+
+impl Default for PgnHeaders {
+    /// Creates a new empty PgnHeaders struct
+    fn default() -> Self {
+        Self::new()
     }
 }
 

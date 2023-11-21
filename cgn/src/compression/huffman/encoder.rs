@@ -78,8 +78,8 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
 
 /// Compress a PGN file
 pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
-    let headers = compress_headers(pgn)?;
-    let moves = compress_moves(pgn)?;
+    let mut headers = compress_headers(pgn)?;
+    let mut moves = compress_moves(pgn)?;
 
     // if headers are empty, set bitvec to [1], otherwise set to signed i8 (1 byte)
     let mut encoded_pgn;
@@ -90,8 +90,8 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     }
 
     // add the headers and moves to the encoded pgn
-    encoded_pgn.append(&mut headers.clone());
-    encoded_pgn.append(&mut moves.clone());
+    encoded_pgn.append(&mut headers);
+    encoded_pgn.append(&mut moves);
     Ok(encoded_pgn)
 }
 
