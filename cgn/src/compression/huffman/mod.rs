@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 pub use decoder::decompress_pgn_data;
 pub use encoder::compress_pgn_data;
 
-export_to_wasm!("huffman", compress_pgn_data,decompress_pgn_data);
+export_to_wasm!("huffman", compress_pgn_data, decompress_pgn_data);
 
 #[cfg(test)]
 mod tests {
