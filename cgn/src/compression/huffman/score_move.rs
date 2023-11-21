@@ -1,33 +1,37 @@
+use anyhow::Result;
 use shakmaty::{attacks::pawn_attacks, Chess, Color, Move, Piece, Position, Role, Square};
 
 type PieceScore = i32;
 
+/// Get the index of a move in the list of legal moves for a position
 pub fn get_move_index(pos: &Chess, m: &Move) -> Option<usize> {
     let moves = generate_moves(pos);
     moves.iter().position(|x| x == m)
 }
 
+/// Generate a list of legal moves for a position sorted by score
 pub fn generate_moves(pos: &Chess) -> Vec<Move> {
     let mut legal_moves = pos.legal_moves();
-    legal_moves.sort_unstable_by_key(|m| -move_score(pos, m));
+    legal_moves.sort_unstable_by_key(|m| -move_score(pos, m).unwrap_or(0));
     legal_moves.to_vec()
 }
 
-pub fn move_score(pos: &Chess, m: &Move) -> PieceScore {
+/// Calculate the score for a move
+pub fn move_score(pos: &Chess, m: &Move) -> Result<PieceScore> {
     let promotion_score = promotion_score(m);
     let capture_score = capture_score(m);
     let pawn_defense_score = pawn_defense_score(pos, m);
     let move_value = move_pst_score(pos.turn(), m);
 
     let to_value = PieceScore::from(m.to());
-    let from_value = PieceScore::from(m.from().expect("No from square"));
+    let from_value = PieceScore::from(m.from().ok_or(anyhow::anyhow!("No from square"))?);
 
-    (promotion_score << 26)
+    Ok((promotion_score << 26)
         + (capture_score << 25)
         + (pawn_defense_score << 24)
-        + (move_value << 12)
+        + (move_value? << 12)
         + (to_value << 6)
-        + from_value
+        + from_value)
 }
 
 /// Calculate the score for a move that promotes a pawn
@@ -81,10 +85,13 @@ fn pst_score(piece: Piece, square: Square) -> PieceScore {
 
 /// Calculate the score for a move according to Lichess piece square tables
 /// Add 512 to the score to make it positive
-fn move_pst_score(turn: Color, m: &Move) -> PieceScore {
+fn move_pst_score(turn: Color, m: &Move) -> Result<PieceScore> {
     let to_score = pst_score(m.role().of(turn), m.to());
-    let from_score = pst_score(m.role().of(turn), m.from().expect("No from square"));
-    512 + to_score - from_score
+    let from_score = pst_score(
+        m.role().of(turn),
+        m.from().ok_or(anyhow::anyhow!("No from square"))?,
+    );
+    Ok(512 + to_score - from_score)
 }
 
 #[rustfmt::skip]
@@ -312,6 +319,6 @@ mod tests {
             capture: None,
             promotion: None,
         };
-        assert_eq!(move_pst_score(pos.turn(), &m), 512 - 5 - 10);
+        assert_eq!(move_pst_score(pos.turn(), &m).unwrap(), 512 - 5 - 10);
     }
 }
