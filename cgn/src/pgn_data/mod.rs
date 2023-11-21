@@ -1,6 +1,8 @@
 mod pgn_vistor;
 mod san_plus_wrapper;
 
+pub use san_plus_wrapper::SanPlusWrapper;
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 /// PGN headers struct that holds the headers of a PGN game.
 /// Only stores the data required for PGN 'reduced export format'.
@@ -26,6 +28,17 @@ impl PgnHeaders {
             black: String::new(),
             result: String::new(),
         }
+    }
+
+    // Checks if the PgnHeaders struct is empty.
+    pub fn is_empty(&self) -> bool {
+        self.event.is_empty()
+            && self.site.is_empty()
+            && self.date.is_empty()
+            && self.round.is_empty()
+            && self.white.is_empty()
+            && self.black.is_empty()
+            && self.result.is_empty()
     }
 }
 
