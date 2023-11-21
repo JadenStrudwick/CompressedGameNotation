@@ -157,43 +157,43 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     }
 
     #[test]
-    /// Tests that we can encode the headers of a game
-    fn test_encode_headers() {
+    /// Tests that we can compress the headers of a game
+    fn test_compress_headers() {
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
         let headers = compress_headers(&pgn).unwrap();
         assert_eq!(headers.len(), 960);
     }
 
     #[test]
-    /// Tests that we can encode the moves of a game
-    fn test_encode_moves() {
+    /// Tests that we can compress the moves of a game
+    fn test_compress_moves() {
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
         let bit_moves = compress_moves(&pgn).unwrap();
         assert_eq!(bit_moves.len(), 463);
     }
 
     #[test]
-    /// Tests that we can encode a game
-    fn test_encode_pgn() {
+    /// Tests that we can compress a game
+    fn test_compress_pgn() {
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
-        let encoded_pgn = compress_pgn_data(&pgn).unwrap();
-        assert_eq!(encoded_pgn.len(), 1431);
+        let compressed_pgn = compress_pgn_data(&pgn).unwrap();
+        assert_eq!(compressed_pgn.len(), 1431);
     }
 
     #[test]
     /// Tests that if the headers are empty, the first bit is set to 1
-    fn test_encode_pgn_empty_headers() {
+    fn test_compress_pgn_empty_headers() {
         let mut pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         pgn.clear_headers();
-        let encoded_pgn = compress_pgn_data(&pgn).unwrap();
-        assert_eq!(encoded_pgn[0], true);
+        let compressed_pgn = compress_pgn_data(&pgn).unwrap();
+        assert_eq!(compressed_pgn[0], true);
     }
 
     #[test]
     /// Tests that if the headers are not empty, the first bit is set to 0
-    fn test_encode_pgn_non_empty_headers() {
+    fn test_compress_pgn_non_empty_headers() {
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
-        let encoded_pgn = compress_pgn_data(&pgn).unwrap();
-        assert_eq!(encoded_pgn[0], false);
+        let compressed_pgn = compress_pgn_data(&pgn).unwrap();
+        assert_eq!(compressed_pgn[0], false);
     }
 }
