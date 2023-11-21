@@ -20,8 +20,8 @@ fn bench_huffman(_c: &mut Criterion) {
 }
 
 // criterion_group!(benches, bench_bincode_zlib);
-criterion_group!(benches, bench_huffman);
-// criterion_group!(benches, bench_bincode_zlib, bench_huffman);
+// criterion_group!(benches, bench_huffman);
+criterion_group!(benches, bench_bincode_zlib, bench_huffman);
 criterion_main!(benches);
 
 mod utils {
