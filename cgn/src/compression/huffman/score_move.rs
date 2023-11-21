@@ -293,7 +293,10 @@ mod tests {
             promotion: None,
         };
         assert_eq!(
-            pst_score(black_move.role().of(pos.turn()), black_move.from().expect("No from square")),
+            pst_score(
+                black_move.role().of(pos.turn()),
+                black_move.from().expect("No from square")
+            ),
             10
         );
     }

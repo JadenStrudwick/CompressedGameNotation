@@ -2,11 +2,11 @@ use super::huffman_codes::lichess_huffman_weights;
 use super::score_move::get_move_index;
 use crate::pgn_data::PgnData;
 use anyhow::{anyhow, Result};
+use bincode::serialize_into;
 use bit_vec::BitVec;
+use flate2::{write::ZlibEncoder, Compression};
 use huffman_compress::Book;
 use shakmaty::{Chess, Move, Position};
-use bincode::serialize_into;
-use flate2::{write::ZlibEncoder, Compression};
 
 /// Converts an i8 to a bit vector of length 8
 fn i8_to_bit_vec(i: i8) -> BitVec {
@@ -19,8 +19,8 @@ fn i8_to_bit_vec(i: i8) -> BitVec {
 
 /// Game encoder that encodes moves into a bit vector using Huffman encoding
 struct GameEncoder {
-    book: Book<u8>, // The Huffman book
-    pub pos: Chess, // The current position 
+    book: Book<u8>,        // The Huffman book
+    pub pos: Chess,        // The current position
     pub bit_moves: BitVec, // The encoded moves
 }
 
@@ -89,7 +89,7 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
         encoded_pgn = i8_to_bit_vec(i8::try_from(headers.to_bytes().len())?);
     }
 
-    // add the headers and moves to the encoded pgn 
+    // add the headers and moves to the encoded pgn
     encoded_pgn.append(&mut headers.clone());
     encoded_pgn.append(&mut moves.clone());
     Ok(encoded_pgn)
@@ -159,7 +159,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     #[test]
     /// Tests that we can compress the headers of a game
     fn test_compress_headers() {
-        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
+        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         let headers = compress_headers(&pgn).unwrap();
         assert_eq!(headers.len(), 960);
     }
@@ -167,7 +167,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     #[test]
     /// Tests that we can compress the moves of a game
     fn test_compress_moves() {
-        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
+        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         let bit_moves = compress_moves(&pgn).unwrap();
         assert_eq!(bit_moves.len(), 463);
     }
@@ -175,7 +175,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     #[test]
     /// Tests that we can compress a game
     fn test_compress_pgn() {
-        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
+        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         let compressed_pgn = compress_pgn_data(&pgn).unwrap();
         assert_eq!(compressed_pgn.len(), 1431);
     }

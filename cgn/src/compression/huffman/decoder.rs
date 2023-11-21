@@ -1,4 +1,3 @@
-
 use super::huffman_codes::lichess_huffman_weights;
 use super::score_move::generate_moves;
 use crate::pgn_data::{PgnData, PgnHeaders, SanPlusWrapper};
@@ -10,7 +9,7 @@ use shakmaty::{san::SanPlus, Chess};
 /// Gets the bit vector slice from start (inclusive) to end (exclusive)
 fn get_bitvec_slice(bit_vec: &BitVec, start: usize, end: usize) -> Result<BitVec> {
     let len = bit_vec.len();
-    
+
     // check for invalid indices
     if (start > end) || (start >= len) || (end > len) {
         return Err(anyhow!("Invalid indices"));

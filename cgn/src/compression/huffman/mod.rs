@@ -1,14 +1,14 @@
 use crate::{export_to_wasm, pgn_data::PgnData};
+mod decoder;
+mod encoder;
 mod huffman_codes;
 mod score_move;
-mod encoder;
-mod decoder;
-use wasm_bindgen::prelude::*;
-use std::str::FromStr;
 use bit_vec::BitVec;
+use std::str::FromStr;
+use wasm_bindgen::prelude::*;
 
-pub use encoder::compress_pgn_data;
 pub use decoder::decompress_pgn_data;
+pub use encoder::compress_pgn_data;
 
 export_to_wasm!(self);
 
