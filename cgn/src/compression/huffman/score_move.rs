@@ -2,6 +2,17 @@ use shakmaty::{attacks::pawn_attacks, Chess, Color, Move, Piece, Position, Role,
 
 type PieceScore = i32;
 
+pub fn get_move_index(pos: &Chess, m: &Move) -> Option<usize> {
+    let moves = generate_moves(pos);
+    moves.iter().position(|x| x == m)
+}
+
+pub fn generate_moves(pos: &Chess) -> Vec<Move> {
+    let mut legal_moves = pos.legal_moves();
+    legal_moves.sort_unstable_by_key(|m| -move_score(pos, m));
+    legal_moves.to_vec()
+}
+
 pub fn move_score(pos: &Chess, m: &Move) -> PieceScore {
     let promotion_score = promotion_score(m);
     let capture_score = capture_score(m);
@@ -136,6 +147,14 @@ const LICHESS_TABLES: [[i16; 64]; 6] = [
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    // Test that the correct number of moves are generated for the starting position
+    fn correct_num_moves() {
+        let pos = Chess::default();
+        let moves = generate_moves(&pos);
+        assert_eq!(moves.len(), 20);
+    }
 
     #[test]
     /// Test that the score for a move that promotes to a Knight is 1
