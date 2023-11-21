@@ -9,7 +9,6 @@ use bincode::serialize_into;
 use flate2::{write::ZlibEncoder, Compression};
 
 /// Converts an i8 to a bit vector of length 8
-// TODO maybe check over
 fn i8_to_bit_vec(i: i8) -> BitVec {
     let mut bit_vec = BitVec::new();
     for j in 0..8 {
@@ -122,16 +121,16 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Tests that we can encode the headers of a game
     fn test_encode_headers() {
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
-        let headers = encode_headers(&pgn);
-        assert_eq!(headers.unwrap().len(), 960);
+        let headers = compress_headers(&pgn).unwrap();
+        assert_eq!(headers.len(), 960);
     }
 
     #[test]
     /// Tests that we can encode the moves of a game
     fn test_encode_moves() {
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap(); 
-        let bit_moves = encode_moves(&pgn);
-        assert_eq!(bit_moves.unwrap().len(), 463);
+        let bit_moves = compress_moves(&pgn).unwrap();
+        assert_eq!(bit_moves.len(), 463);
     }
 
     #[test]
