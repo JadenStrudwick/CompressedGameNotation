@@ -10,11 +10,23 @@ fn bench_bincode_zlib(_c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, bench_bincode_zlib);
+/// Collects and prints metrics for the huffman compression strategy.
+fn bench_huffman(_c: &mut Criterion) {
+    println!("[BENCHMARK] Collecting metrics for huffman...");
+    utils::collect_metrics(
+        cgn::compression::huffman::compress_pgn_data,
+        cgn::compression::huffman::decompress_pgn_data,
+    );
+}
+
+// criterion_group!(benches, bench_bincode_zlib);
+criterion_group!(benches, bench_huffman);
+// criterion_group!(benches, bench_bincode_zlib, bench_huffman);
 criterion_main!(benches);
 
 mod utils {
     use anyhow::Result;
+    use bit_vec::BitVec;
     use cgn::pgn_data::PgnData;
     use rayon::prelude::*;
     use std::{
@@ -85,8 +97,8 @@ mod utils {
     ///  Metrics for a compression strategy.
     /// * Time to compress game (nanoseconds)
     /// * Time to decompress game (nanoseconds)
-    /// * Size of uncompressed game (total bytes including headers)
-    /// * Size of compressed game (total bytes including headers)
+    /// * Size of uncompressed game (total bits including headers)
+    /// * Size of compressed game (total bits including headers)
     /// * Bits per move (total bits / number of moves)
     /// * Bits per move excluding headers (total move bits / number of moves)
     pub struct Metrics {
@@ -101,8 +113,8 @@ mod utils {
     /// Collect a single metric for a compression strategy.
     fn collect_single_metric(
         pgn_str: &str,
-        compress_fn: fn(&PgnData) -> Result<Vec<u8>>,
-        decompress_fn: fn(&[u8]) -> Result<PgnData>,
+        compress_fn: fn(&PgnData) -> Result<BitVec>,
+        decompress_fn: fn(&BitVec) -> Result<PgnData>,
     ) -> Result<Metrics> {
         let mut pgn_data = PgnData::from_str(pgn_str)?;
 
@@ -127,16 +139,16 @@ mod utils {
         let time_to_decompress = end.duration_since(start).as_nanos();
 
         // decompressed size
-        let decompressed_size = decompressed_data.to_string().len();
+        let decompressed_size = decompressed_data.to_string().len() * 8;
 
         // bits per move
-        let bits_per_move = (compressed_size * 8) as f64 / pgn_data.moves.len() as f64;
+        let bits_per_move = compressed_size as f64 / pgn_data.moves.len() as f64;
 
         // bits per move excluding headers
         pgn_data.clear_headers();
         let compressed_data_no_headers = compress_fn(&pgn_data)?;
         let bits_per_move_excluding_headers =
-            (compressed_data_no_headers.len() * 8) as f64 / pgn_data.moves.len() as f64;
+            compressed_data_no_headers.len() as f64 / pgn_data.moves.len() as f64;
 
         Ok(Metrics {
             time_to_compress,
@@ -150,8 +162,8 @@ mod utils {
 
     /// Collect the metrics for a compression strategy.
     pub fn collect_metrics(
-        compress_fn: fn(&PgnData) -> Result<Vec<u8>>,
-        decompress_fn: fn(&[u8]) -> Result<PgnData>,
+        compress_fn: fn(&PgnData) -> Result<BitVec>,
+        decompress_fn: fn(&BitVec) -> Result<PgnData>,
     ) {
         let start = std::time::Instant::now();
         let metrics = pgn_db_into_iter("./benches/lichessDB.pgn")
@@ -161,6 +173,11 @@ mod utils {
             .filter_map(|x| x.ok())
             .collect::<Vec<_>>();
         let end = std::time::Instant::now();
+
+        if metrics.is_empty() {
+            println!("\tNo metrics collected");
+            return;
+        }
 
         // compute averages
         let avg_time_to_compress =
@@ -193,9 +210,9 @@ mod utils {
             "\tAverage time to decompress: {} seconds",
             avg_time_to_decompress as f64 / 1_000_000_000.0
         );
-        println!("\tAverage compressed size: {} bytes", avg_compressed_size);
+        println!("\tAverage compressed size: {} bits", avg_compressed_size);
         println!(
-            "\tAverage decompressed size: {} bytes",
+            "\tAverage decompressed size: {} bits",
             avg_decompressed_size
         );
         println!("\tAverage bits per move: {}", avg_bits_per_move);
