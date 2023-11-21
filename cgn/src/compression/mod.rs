@@ -3,8 +3,8 @@ pub mod bincode_zlib;
 pub mod huffman;
 
 /// Accepts a module that contains the following and exports them to WASM string versions.
-/// * compress_pgn_data(&PgnData) -> Result<Vec<u8>>.
-/// * decompress_pgn_data(&[u8]) -> Result<PgnData>.
+/// * compress_pgn_data(&PgnData) -> Result<BitVec>.
+/// * decompress_pgn_data(&BitVec) -> Result<PgnData>.
 #[macro_export]
 macro_rules! export_to_wasm {
     ($module_name:ident) => {
@@ -19,14 +19,14 @@ macro_rules! export_to_wasm {
 
             // compress the data and return the result
             match $module_name::compress_pgn_data(&pgn_data) {
-                Ok(compressed_data) => compressed_data,
+                Ok(compressed_data) => compressed_data.to_bytes(),
                 Err(_) => Vec::new(),
             }
         }
         /// Decompresses a vector of bytes into a PGN string.
         #[wasm_bindgen]
         pub fn decompress_pgn_str(compressed_data: &[u8]) -> String {
-            match $module_name::decompress_pgn_data(compressed_data) {
+            match $module_name::decompress_pgn_data(&BitVec::from_bytes(compressed_data)) {
                 Ok(pgn_data) => pgn_data.to_string(),
                 Err(_) => String::new(),
             }
