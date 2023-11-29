@@ -19,9 +19,9 @@ fn bench_huffman(_c: &mut Criterion) {
     );
 }
 
-// criterion_group!(benches, bench_bincode_zlib);
+criterion_group!(benches, bench_bincode_zlib);
 // criterion_group!(benches, bench_huffman);
-criterion_group!(benches, bench_bincode_zlib, bench_huffman);
+// criterion_group!(benches, bench_bincode_zlib, bench_huffman);
 criterion_main!(benches);
 
 mod utils {
@@ -148,7 +148,7 @@ mod utils {
         pgn_data.clear_headers();
         let compressed_data_no_headers = compress_fn(&pgn_data)?;
         let bits_per_move_excluding_headers =
-            compressed_data_no_headers.len() as f64 / pgn_data.moves.len() as f64;
+            (compressed_data_no_headers.len() - 1) as f64 / pgn_data.moves.len() as f64;
 
         Ok(Metrics {
             time_to_compress,
@@ -169,6 +169,7 @@ mod utils {
         let metrics = pgn_db_into_iter("./benches/lichessDB.pgn")
             .expect("Failed to open PGN database file")
             .par_bridge()
+            .take_any(1_000_000)
             .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
             .filter_map(|x| x.ok())
             .collect::<Vec<_>>();

@@ -39,13 +39,11 @@ impl pgn_reader::Visitor for PgnVisitor {
 
     /// Called when a move is found in the PGN file.
     fn san(&mut self, _san_plus: pgn_reader::SanPlus) {
-        // add the move to the moves vector
         self.data.moves.push(SanPlusWrapper(_san_plus));
     }
 
     /// Called when the game ends.
     fn end_game(&mut self) -> Self::Result {
-        // return the PgnData struct with the collected data
         self.data.to_owned()
     }
 }
