@@ -16,9 +16,9 @@ fn bench_huffman(_c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, bench_bincode);
+// criterion_group!(benches, bench_bincode);
 // criterion_group!(benches, bench_huffman);
-// criterion_group!(benches, bench_bincode_zlib, bench_huffman);
+criterion_group!(benches, bench_bincode, bench_huffman);
 criterion_main!(benches);
 
 mod utils {
@@ -92,15 +92,15 @@ mod utils {
     }
 
     ///  Metrics for a compression strategy.
-    /// * Time to compress game (nanoseconds)
-    /// * Time to decompress game (nanoseconds)
+    /// * Time to compress game (seconds)
+    /// * Time to decompress game (seconds)
     /// * Size of uncompressed game (total bits including headers)
     /// * Size of compressed game (total bits including headers)
     /// * Bits per move (total bits / number of moves)
     /// * Bits per move excluding headers (total move bits / number of moves)
     pub struct Metrics {
-        time_to_compress: u128,
-        time_to_decompress: u128,
+        time_to_compress: f64,
+        time_to_decompress: f64,
         compressed_size: usize,
         decompressed_size: usize,
         bits_per_move: f64,
@@ -124,7 +124,7 @@ mod utils {
         let start = std::time::Instant::now();
         let compressed_data = compress_fn(&pgn_data)?;
         let end = std::time::Instant::now();
-        let time_to_compress = end.duration_since(start).as_nanos();
+        let time_to_compress = end.duration_since(start).as_secs_f64();
 
         // compressed size
         let compressed_size = compressed_data.len();
@@ -133,7 +133,7 @@ mod utils {
         let start = std::time::Instant::now();
         let decompressed_data = decompress_fn(&compressed_data)?;
         let end = std::time::Instant::now();
-        let time_to_decompress = end.duration_since(start).as_nanos();
+        let time_to_decompress = end.duration_since(start).as_secs_f64();
 
         // decompressed size
         let decompressed_size = decompressed_data.to_string().len() * 8;
@@ -179,9 +179,9 @@ mod utils {
 
         // compute averages
         let avg_time_to_compress =
-            metrics.iter().map(|x| x.time_to_compress).sum::<u128>() / metrics.len() as u128;
+            metrics.iter().map(|x| x.time_to_compress).sum::<f64>() / metrics.len() as f64;
         let avg_time_to_decompress =
-            metrics.iter().map(|x| x.time_to_decompress).sum::<u128>() / metrics.len() as u128;
+            metrics.iter().map(|x| x.time_to_decompress).sum::<f64>() / metrics.len() as f64;
         let avg_compressed_size =
             metrics.iter().map(|x| x.compressed_size).sum::<usize>() / metrics.len();
         let avg_decompressed_size =
@@ -198,15 +198,15 @@ mod utils {
         println!("\tNumber of games benchmarked against: {}", metrics.len());
         println!(
             "\tTotal time to benchmark: {} seconds",
-            end.duration_since(start).as_nanos() as f64 / 1_000_000_000.0
+            end.duration_since(start).as_secs_f64()
         );
         println!(
             "\tAverage time to compress: {} seconds",
-            avg_time_to_compress as f64 / 1_000_000_000.0
+            avg_time_to_compress
         );
         println!(
             "\tAverage time to decompress: {} seconds",
-            avg_time_to_decompress as f64 / 1_000_000_000.0
+            avg_time_to_decompress
         );
         println!("\tAverage compressed size: {} bits", avg_compressed_size);
         println!(
