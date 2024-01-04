@@ -55,7 +55,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
 
     #[test]
     /// Test if the bincode Zlib compression is correct for PGN structs.
-    fn bincode_zlib_pgn_data() {
+    fn bincode_pgn_data() {
         let pgn_str = PGN_STR_EXAMPLE;
         let pgn_data = PgnData::from_str(pgn_str).unwrap();
         let compressed_data = compress_pgn_data(&pgn_data).unwrap();

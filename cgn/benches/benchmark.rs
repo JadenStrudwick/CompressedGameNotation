@@ -1,13 +1,10 @@
-use cgn::compression::bincode_zlib;
+use cgn::compression::bincode;
 use criterion::{criterion_group, criterion_main, Criterion};
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
-fn bench_bincode_zlib(_c: &mut Criterion) {
-    println!("[BENCHMARK] Collecting metrics for bincode_zlib...");
-    utils::collect_metrics(
-        bincode_zlib::compress_pgn_data,
-        bincode_zlib::decompress_pgn_data,
-    );
+fn bench_bincode(_c: &mut Criterion) {
+    println!("[BENCHMARK] Collecting metrics for bincode...");
+    utils::collect_metrics(bincode::compress_pgn_data, bincode::decompress_pgn_data);
 }
 
 /// Collects and prints metrics for the huffman compression strategy.
@@ -19,7 +16,7 @@ fn bench_huffman(_c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, bench_bincode_zlib);
+criterion_group!(benches, bench_bincode);
 // criterion_group!(benches, bench_huffman);
 // criterion_group!(benches, bench_bincode_zlib, bench_huffman);
 criterion_main!(benches);
@@ -148,7 +145,7 @@ mod utils {
         pgn_data.clear_headers();
         let compressed_data_no_headers = compress_fn(&pgn_data)?;
         let bits_per_move_excluding_headers =
-            (compressed_data_no_headers.len() - 1) as f64 / pgn_data.moves.len() as f64;
+            (compressed_data_no_headers.len()) as f64 / pgn_data.moves.len() as f64;
 
         Ok(Metrics {
             time_to_compress,
