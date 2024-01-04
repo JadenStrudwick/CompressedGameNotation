@@ -72,9 +72,8 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
     let mut san_plus_moves = Vec::new();
     for i in lichess_huffman_weights().1.decoder(move_bits, 256) {
         let moves = generate_moves(&pos);
-        let m = moves
-            .get(i as usize)
-            .ok_or(anyhow!("Failed to decode move"))?;
+        let index: usize = i.try_into()?;
+        let m = moves.get(index).ok_or(anyhow!("Failed to decode move"))?;
         let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
         let san_plus_wrapper = SanPlusWrapper(san_plus);
         san_plus_moves.push(san_plus_wrapper);

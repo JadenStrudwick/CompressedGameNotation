@@ -74,23 +74,25 @@ fn pawn_defense_score(pos: &Chess, m: &Move) -> PieceScore {
 }
 
 /// Calculate the score for a piece according to Lichess piece square tables
-fn pst_score(piece: Piece, square: Square) -> PieceScore {
+fn pst_score(piece: Piece, square: Square) -> Result<PieceScore> {
     let sq = if piece.color.is_white() {
         square.flip_vertical()
     } else {
         square
     };
-    PieceScore::from(LICHESS_TABLES[piece.role as usize - 1][sq as usize])
+    let role_index: usize = piece.role.try_into()?;
+    let sq_index: usize = sq.try_into()?;
+    Ok(PieceScore::from(LICHESS_TABLES[role_index - 1][sq_index]))
 }
 
 /// Calculate the score for a move according to Lichess piece square tables
 /// Add 512 to the score to make it positive
 fn move_pst_score(turn: Color, m: &Move) -> Result<PieceScore> {
-    let to_score = pst_score(m.role().of(turn), m.to());
+    let to_score = pst_score(m.role().of(turn), m.to())?;
     let from_score = pst_score(
         m.role().of(turn),
         m.from().ok_or(anyhow::anyhow!("No from square"))?,
-    );
+    )?;
     Ok(512 + to_score - from_score)
 }
 
@@ -275,7 +277,7 @@ mod tests {
             promotion: None,
         };
         assert_eq!(
-            pst_score(m.role().of(pos.turn()), m.from().expect("No from square")),
+            pst_score(m.role().of(pos.turn()), m.from().expect("No from square")).unwrap(),
             10
         );
     }
@@ -303,7 +305,7 @@ mod tests {
             pst_score(
                 black_move.role().of(pos.turn()),
                 black_move.from().expect("No from square")
-            ),
+            ).unwrap(),
             10
         );
     }

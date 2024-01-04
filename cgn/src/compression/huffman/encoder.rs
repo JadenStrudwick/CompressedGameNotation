@@ -42,7 +42,8 @@ impl GameEncoder {
                 if i > 255 {
                     return Err(anyhow!("Move index exceeds maximum value"));
                 }
-                self.book.encode(&mut self.bit_moves, &(i as u8))?;
+                let index: u8 = i.try_into()?;
+                self.book.encode(&mut self.bit_moves, &(index))?;
                 self.pos.play_unchecked(m);
                 Ok(())
             }
@@ -120,7 +121,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     #[test]
     /// Tests that we can convert a 0 i8 to a bit vector
     fn test_i8_to_bit_vec_0() {
-        let x = 0 as i8;
+        let x = 0;
         let mut expected = BitVec::new();
         for _ in 0..8 {
             expected.push(false);
@@ -131,7 +132,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     #[test]
     /// Tests that we can convert a 1 i8 to a bit vector
     fn test_i8_to_bit_vec_1() {
-        let x = 1 as i8;
+        let x = 1;
         let mut expected = BitVec::new();
         for _ in 0..7 {
             expected.push(false);
@@ -143,7 +144,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     #[test]
     /// Tests that we can convert a 10 i8 to a bit vector
     fn test_i8_to_bit_vec_10() {
-        let x = 10 as i8;
+        let x = 10;
         let mut expected = BitVec::new();
         expected.push(false); // 0
         expected.push(false); // 0

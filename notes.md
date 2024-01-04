@@ -89,3 +89,9 @@ I've been working on the new encoding scheme inspired by Lichess.
 Major refactor decision is to use BitVec instead of byte arrays for my compressed data. This saves us from any wasted padding bytes.
 
 I NEED TO CHECK MY COMMENTS OVER
+
+# 4th of January 2024
+
+Had a break over the holidays, and due to the CS324 game, but I am back now. I need to start working on the final compression scheme.
+
+However, I spent some time today just refamiliarizing myself with the codebase, and fixing a few explict 'as' casts that could be replaced with 'try_into' casts.
