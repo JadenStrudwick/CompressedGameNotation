@@ -1,15 +1,17 @@
-use crate::export_to_wasm; 
-use crate::compression_utils::{compress_headers, i8_to_bit_vec, get_bitvec_slice, decompress_headers};
 use crate::compression_utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
-use crate::compression_utils::score_move::{get_move_index, generate_moves};
+use crate::compression_utils::score_move::{generate_moves, get_move_index};
+use crate::compression_utils::{
+    compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec,
+};
+use crate::export_to_wasm;
 use crate::pgn_data::{PgnData, SanPlusWrapper};
-use bit_vec::BitVec;
-use std::str::FromStr;
-use wasm_bindgen::prelude::*;
 use anyhow::{anyhow, Result};
+use bit_vec::BitVec;
 use huffman_compress::{Book, Tree};
 use pgn_reader::SanPlus;
 use shakmaty::{Chess, Move, Position};
+use std::str::FromStr;
+use wasm_bindgen::prelude::*;
 
 /// This strategy uses the huffman_compress crate to compress the moves of a PGN file
 /// using Huffman encoding. The headers are compressed using the same method as the
@@ -17,9 +19,9 @@ use shakmaty::{Chess, Move, Position};
 
 /// Game encoder that encodes moves into a bit vector using Huffman encoding
 struct GameEncoder {
-    book: Book<u8>,        
-    pub pos: Chess,        
-    pub bit_moves: BitVec, 
+    book: Book<u8>,
+    pub pos: Chess,
+    pub bit_moves: BitVec,
 }
 
 impl GameEncoder {
@@ -121,16 +123,16 @@ pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
     let (headers, header_bytes_len) = decompress_headers(bit_vec)?;
     if header_bytes_len == 0 {
         let move_bits = get_bitvec_slice(bit_vec, 1, bit_vec.len())?;
-        return Ok(PgnData {
-            headers,
-            moves: decompress_moves(&move_bits)?, 
-        });
-    } else {
-        let move_bits = get_bitvec_slice(bit_vec, header_bytes_len, bit_vec.len())?;
-        return Ok(PgnData {
+        Ok(PgnData {
             headers,
             moves: decompress_moves(&move_bits)?,
-        });
+        })
+    } else {
+        let move_bits = get_bitvec_slice(bit_vec, header_bytes_len, bit_vec.len())?;
+        Ok(PgnData {
+            headers,
+            moves: decompress_moves(&move_bits)?,
+        })
     }
 }
 

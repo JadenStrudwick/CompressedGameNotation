@@ -4,7 +4,7 @@ use crate::pgn_data::{PgnData, PgnHeaders};
 use anyhow::{anyhow, Result};
 use bincode::serialize_into;
 use bit_vec::BitVec;
-use flate2::{write::ZlibEncoder, Compression, read::ZlibDecoder};
+use flate2::{read::ZlibDecoder, write::ZlibEncoder, Compression};
 
 /// Converts an i8 to a bit vector of length 8
 pub fn i8_to_bit_vec(i: i8) -> BitVec {
@@ -50,17 +50,14 @@ pub fn compress_headers(pgn: &PgnData) -> Result<BitVec> {
 
 /// Decompress the headers of a PGN file using ZLib maximum compression
 pub fn decompress_headers(bit_vec: &BitVec) -> Result<(PgnHeaders, usize)> {
-    // if the first bit is 1, then there are no headers 
+    // if the first bit is 1, then there are no headers
     if bit_vec[0] {
         return Ok((PgnHeaders::new(), 0));
     }
 
     // get the header length in bytes from the first byte of the data
-    let header_bytes_len = bit_vec
-        .iter()
-        .take(8)
-        .enumerate()
-        .fold(
+    let header_bytes_len =
+        bit_vec.iter().take(8).enumerate().fold(
             0,
             |byte, (i, bit)| {
                 if bit {
