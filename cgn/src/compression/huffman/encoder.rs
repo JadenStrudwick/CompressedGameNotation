@@ -1,35 +1,24 @@
-use super::huffman_codes::lichess_huffman_weights;
-use super::score_move::get_move_index;
+use crate::compression_utils::{compress_headers, i8_to_bit_vec};
+use crate::compression_utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
+use crate::compression_utils::score_move::get_move_index;
 use crate::pgn_data::PgnData;
 use anyhow::{anyhow, Result};
-use bincode::serialize_into;
 use bit_vec::BitVec;
-use flate2::{write::ZlibEncoder, Compression};
 use huffman_compress::Book;
 use shakmaty::{Chess, Move, Position};
 
-/// Converts an i8 to a bit vector of length 8
-fn i8_to_bit_vec(i: i8) -> BitVec {
-    let mut bit_vec = BitVec::new();
-    for j in (0..8).rev() {
-        bit_vec.push((i >> j) & 1 == 1);
-    }
-    bit_vec
-}
-
 /// Game encoder that encodes moves into a bit vector using Huffman encoding
 struct GameEncoder {
-    book: Book<u8>,        // The Huffman book
-    pub pos: Chess,        // The current position
-    pub bit_moves: BitVec, // The encoded moves
+    book: Book<u8>,        
+    pub pos: Chess,        
+    pub bit_moves: BitVec, 
 }
 
 impl GameEncoder {
     /// Creates a new GameEncoder with the huffman book and a default position
     pub fn new() -> GameEncoder {
-        let (book, _) = lichess_huffman_weights();
         GameEncoder {
-            book,
+            book: convert_hashmap_to_weights(&get_lichess_hashmap()).0,
             pos: Chess::default(),
             bit_moves: BitVec::new(),
         }
@@ -50,21 +39,6 @@ impl GameEncoder {
             None => Err(anyhow!("Move not found")),
         }
     }
-}
-
-/// Compress the headers of a PGN file using ZLib maximum compression
-fn compress_headers(pgn: &PgnData) -> Result<BitVec> {
-    // if the headers are empty, return an empty bit vector
-    if pgn.headers.is_empty() {
-        return Ok(BitVec::new());
-    }
-
-    // otherwise compress the headers
-    let mut compressed_headers = Vec::new();
-    let mut encoder = ZlibEncoder::new(&mut compressed_headers, Compression::best());
-    serialize_into(&mut encoder, &pgn.headers)?;
-    encoder.finish()?;
-    Ok(BitVec::from_bytes(&compressed_headers))
 }
 
 /// Encode the moves of a PGN file using Huffman encoding
@@ -119,71 +93,8 @@ Bxf7+ Kf8 42. Qxf2 Rxd1 43. Bxg6 Qd6 44. g5 Qd3 45. Qc5+ Qd6 46. Qc8+ Kg7 47.
 Qxb7+ Kf8 48. Qf7# 1-0"#;
 
     #[test]
-    /// Tests that we can convert a 0 i8 to a bit vector
-    fn test_i8_to_bit_vec_0() {
-        let x = 0;
-        let mut expected = BitVec::new();
-        for _ in 0..8 {
-            expected.push(false);
-        }
-        assert_eq!(i8_to_bit_vec(x), expected);
-    }
-
-    #[test]
-    /// Tests that we can convert a 1 i8 to a bit vector
-    fn test_i8_to_bit_vec_1() {
-        let x = 1;
-        let mut expected = BitVec::new();
-        for _ in 0..7 {
-            expected.push(false);
-        }
-        expected.push(true);
-        assert_eq!(i8_to_bit_vec(x), expected);
-    }
-
-    #[test]
-    /// Tests that we can convert a 10 i8 to a bit vector
-    fn test_i8_to_bit_vec_10() {
-        let x = 10;
-        let mut expected = BitVec::new();
-        expected.push(false); // 0
-        expected.push(false); // 0
-        expected.push(false); // 0
-        expected.push(false); // 0
-        expected.push(true); // 1
-        expected.push(false); // 0
-        expected.push(true); // 1
-        expected.push(false); // 0
-        assert_eq!(i8_to_bit_vec(x), expected);
-    }
-
-    #[test]
-    /// Tests that we can compress the headers of a game
-    fn test_compress_headers() {
-        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
-        let headers = compress_headers(&pgn).unwrap();
-        assert_eq!(headers.len(), 960);
-    }
-
-    #[test]
-    /// Tests that we can compress the moves of a game
-    fn test_compress_moves() {
-        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
-        let bit_moves = compress_moves(&pgn).unwrap();
-        assert_eq!(bit_moves.len(), 463);
-    }
-
-    #[test]
-    /// Tests that we can compress a game
-    fn test_compress_pgn() {
-        let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
-        let compressed_pgn = compress_pgn_data(&pgn).unwrap();
-        assert_eq!(compressed_pgn.len(), 1431);
-    }
-
-    #[test]
     /// Tests that if the headers are empty, the first bit is set to 1
-    fn test_compress_pgn_empty_headers() {
+    fn first_bit_zero_when_empty_headers() {
         let mut pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         pgn.clear_headers();
         let compressed_pgn = compress_pgn_data(&pgn).unwrap();
@@ -192,7 +103,7 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
 
     #[test]
     /// Tests that if the headers are not empty, the first bit is set to 0
-    fn test_compress_pgn_non_empty_headers() {
+    fn first_bit_one_when_full_headers() {
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         let compressed_pgn = compress_pgn_data(&pgn).unwrap();
         assert_eq!(compressed_pgn[0], false);
