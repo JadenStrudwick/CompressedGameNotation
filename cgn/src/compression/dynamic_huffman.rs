@@ -12,7 +12,7 @@ use anyhow::{anyhow, Result};
 use shakmaty::{Chess, Move, Position};
 
 const GAUSSIAN_HEIGHT: f64 = 1.0;
-const GAUSSIAN_DEV: f64 = 0.0;
+const GAUSSIAN_DEV: f64 = 1.0;
 
 fn gaussian(mean: f64, x: f64) -> f64 {
   let b = -((x - mean).powi(2) / (2.0 * GAUSSIAN_DEV.powi(2)));
