@@ -1,4 +1,5 @@
-use crate::{export_to_wasm, pgn_data::PgnData};
+use crate::export_to_wasm; 
+use crate::pgn_data::PgnData;
 use anyhow::Result;
 use bit_vec::BitVec;
 use std::str::FromStr;
