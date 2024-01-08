@@ -17,7 +17,7 @@ pub fn generate_moves(pos: &Chess) -> Vec<Move> {
 }
 
 /// Calculate the score for a move
-pub fn move_score(pos: &Chess, m: &Move) -> Result<PieceScore> {
+fn move_score(pos: &Chess, m: &Move) -> Result<PieceScore> {
     let promotion_score = promotion_score(m);
     let capture_score = capture_score(m);
     let pawn_defense_score = pawn_defense_score(pos, m);
