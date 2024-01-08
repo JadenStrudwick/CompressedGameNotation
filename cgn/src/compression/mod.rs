@@ -1,6 +1,7 @@
 // Put all compression modules here for export to root lib.rs.
 pub mod bincode;
 pub mod huffman;
+pub mod dynamic_huffman;
 
 /// Accepts a module that contains the following and exports them to WASM string versions.
 /// * compress_pgn_data(&PgnData) -> Result<BitVec>.
