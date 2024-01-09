@@ -1,12 +1,12 @@
 use huffman_compress::{Book, CodeBuilder, Tree};
 use std::collections::HashMap;
 
-pub fn convert_hashmap_to_weights(hashmap: &HashMap<u8, u32>) -> (Book<u8>, Tree<u8>) {
+pub fn convert_hashmap_to_weights(hashmap: &HashMap<u8, u64>) -> (Book<u8>, Tree<u8>) {
     CodeBuilder::from_iter(hashmap).finish()
 }
 
-pub fn get_lichess_hashmap() -> HashMap<u8, u32> {
-    let mut weights: HashMap<u8, u32> = HashMap::new();
+pub fn get_lichess_hashmap() -> HashMap<u8, u64> {
+    let mut weights: HashMap<u8, u64> = HashMap::new();
     weights.insert(0, 225_883_932);
     weights.insert(1, 134_956_126);
     weights.insert(2, 89_041_269);

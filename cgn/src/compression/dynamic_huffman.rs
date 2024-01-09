@@ -13,30 +13,28 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
-const GAUSSIAN_HEIGHT: f64 = 1.0;
-const GAUSSIAN_DEV: f64 = 1.0;
+const GAUSSIAN_HEIGHT: f64 = 759_000.0;
+const GAUSSIAN_DEV: f64 = 2.5;
 
 fn gaussian(mean: f64, x: f64) -> f64 {
-    let b = -((x - mean).powi(2) / (2.0 * GAUSSIAN_DEV.powi(2)));
-    (GAUSSIAN_HEIGHT - 1.0) * b.exp() + 1.0
+  let b = -((x - mean).powi(2) / (2.0 * GAUSSIAN_DEV.powi(2)));
+  (GAUSSIAN_HEIGHT - 1.0) * b.exp() + 1.0
 }
 
-fn adjust_haspmap(hashmap: &mut HashMap<u8, u32>, mean: f64) {
-    let scale_factors = hashmap
-        .keys()
-        .map(|key| gaussian(mean, *key as f64))
-        .collect::<Vec<f64>>();
+// TODO check for hashmap or hash_map consistency
+fn adjust_haspmap(hashmap: &HashMap<u8, u64>, mean: f64) -> HashMap<u8, u64> {
     hashmap
-        .iter_mut()
-        .zip(scale_factors.iter())
-        .for_each(|((_, value), scale_factor)| {
-            *value = (*value as f64 * *scale_factor) as u32;
-        });
+        .iter()
+        .map(|(key, value)| {
+            let scale_factor = gaussian(mean, *key as f64);
+            (*key, (*value as f64 + scale_factor) as u64)
+        })
+        .collect()
 }
 
 struct GameEncoder {
-    white_hashmap: HashMap<u8, u32>,
-    black_hashmap: HashMap<u8, u32>,
+    white_hashmap: HashMap<u8, u64>,
+    black_hashmap: HashMap<u8, u64>,
     is_white: bool,
     pub pos: Chess,
     pub bit_moves: BitVec,
@@ -65,12 +63,12 @@ impl GameEncoder {
                     let (book, _) = convert_hashmap_to_weights(&self.white_hashmap);
                     book.encode(&mut self.bit_moves, &(index))?;
                     self.pos.play_unchecked(m);
-                    adjust_haspmap(&mut self.white_hashmap, index as f64);
+                    self.white_hashmap = adjust_haspmap(&self.white_hashmap, index as f64);
                 } else {
                     let (book, _) = convert_hashmap_to_weights(&self.black_hashmap);
                     book.encode(&mut self.bit_moves, &(index))?;
                     self.pos.play_unchecked(m);
-                    adjust_haspmap(&mut self.black_hashmap, index as f64);
+                    self.black_hashmap = adjust_haspmap(&self.black_hashmap, index as f64);
                 }
                 self.is_white = !self.is_white;
                 Ok(())
@@ -108,8 +106,8 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
 }
 
 struct GameDecoder {
-    white_hashmap: HashMap<u8, u32>,
-    black_hashmap: HashMap<u8, u32>,
+    white_hashmap: HashMap<u8, u64>,
+    black_hashmap: HashMap<u8, u64>,
     is_white: bool,
     pub pos: Chess,
     pub moves: Vec<SanPlusWrapper>,
@@ -127,13 +125,22 @@ impl GameDecoder {
     }
 
     fn decode_all(&mut self, move_bits: &BitVec) -> Result<()> {
-        let tree = if self.is_white {
-            convert_hashmap_to_weights(&self.white_hashmap).1
-        } else {
-            convert_hashmap_to_weights(&self.black_hashmap).1
-        };
+        let mut move_bits_copy = move_bits.clone();
 
-        for i in tree.decoder(move_bits, 256) {
+        // while we still have bits to decode
+        loop {
+            // start book and tree
+            let (book, tree) = if self.is_white {
+                convert_hashmap_to_weights(&self.white_hashmap)
+            } else {
+                convert_hashmap_to_weights(&self.black_hashmap)
+            };
+
+            // decode one move
+            let i = tree
+                .decoder(&move_bits_copy, 256)
+                .next()
+                .ok_or(anyhow!("Failed to decode move"))?;
             let moves = generate_moves(&self.pos);
             let index: usize = i.try_into()?;
             let m = moves.get(index).ok_or(anyhow!("Move not found"))?;
@@ -142,11 +149,21 @@ impl GameDecoder {
             self.moves.push(san_plus_wrapper);
 
             if self.is_white {
-                adjust_haspmap(&mut self.white_hashmap, index as f64);
+                self.white_hashmap = adjust_haspmap(&self.white_hashmap, index as f64);
             } else {
-                adjust_haspmap(&mut self.black_hashmap, index as f64);
+                self.black_hashmap = adjust_haspmap(&self.black_hashmap, index as f64);
             }
             self.is_white = !self.is_white;
+
+            // encode the move to learn the bitstring
+            let mut bitstring = BitVec::new();
+            book.encode(&mut bitstring, &i)?;
+            if bitstring == move_bits_copy {
+                break;
+            } else {
+                move_bits_copy =
+                    get_bitvec_slice(&move_bits_copy, bitstring.len(), move_bits_copy.len())?;
+            }
         }
         Ok(())
     }
