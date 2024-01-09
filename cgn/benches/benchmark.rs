@@ -16,9 +16,16 @@ fn bench_huffman(_c: &mut Criterion) {
     );
 }
 
-// criterion_group!(benches, bench_bincode);
-// criterion_group!(benches, bench_huffman);
-criterion_group!(benches, bench_bincode, bench_huffman);
+/// Collects and prints metrics for the dynamic huffman compression strategy.
+fn bench_dynamic_huffman(_c: &mut Criterion) {
+    println!("[BENCHMARK] Collecting metrics for dynamic huffman...");
+    utils::collect_metrics(
+        cgn::compression::dynamic_huffman::compress_pgn_data,
+        cgn::compression::dynamic_huffman::decompress_pgn_data,
+    );
+}
+
+criterion_group!(benches, bench_bincode, bench_huffman, bench_dynamic_huffman);
 criterion_main!(benches);
 
 mod utils {
@@ -166,7 +173,7 @@ mod utils {
         let metrics = pgn_db_into_iter("./benches/lichessDB.pgn")
             .expect("Failed to open PGN database file")
             .par_bridge()
-            .take_any(1000)
+            .take_any(1_000)
             .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
             .filter_map(|x| x.ok())
             .collect::<Vec<_>>();
