@@ -16,13 +16,12 @@ use wasm_bindgen::prelude::*;
 const GAUSSIAN_HEIGHT: f64 = 759_000.0;
 const GAUSSIAN_DEV: f64 = 2.5;
 
-fn gaussian(mean: f64, x: f64) -> f64 {
-  let b = -((x - mean).powi(2) / (2.0 * GAUSSIAN_DEV.powi(2)));
-  (GAUSSIAN_HEIGHT - 1.0) * b.exp() + 1.0
+fn gaussian(height: f64, dev: f64, mean: f64, x: f64) -> f64 {
+  let b = -((x - mean).powi(2) / (2.0 * dev.powi(2)));
+  (height - 1.0) * b.exp() + 1.0
 }
 
-// TODO check for hashmap or hash_map consistency
-fn adjust_haspmap(hashmap: &HashMap<u8, u64>, mean: f64) -> HashMap<u8, u64> {
+fn adjust_haspmap(hashmap: &HashMap<u8, u64>, gaussian: impl Fn(f64, f64) -> f64, mean: f64) -> HashMap<u8, u64> {
     hashmap
         .iter()
         .map(|(key, value)| {
@@ -36,16 +35,20 @@ struct GameEncoder {
     white_hashmap: HashMap<u8, u64>,
     black_hashmap: HashMap<u8, u64>,
     is_white: bool,
+    height: f64,
+    dev: f64,
     pub pos: Chess,
     pub bit_moves: BitVec,
 }
 
 impl GameEncoder {
-    pub fn new() -> GameEncoder {
+    pub fn new(height: f64, dev: f64) -> GameEncoder {
         GameEncoder {
             white_hashmap: get_lichess_hashmap(),
             black_hashmap: get_lichess_hashmap(),
             is_white: true,
+            height,
+            dev,
             pos: Chess::default(),
             bit_moves: BitVec::new(),
         }
@@ -59,16 +62,17 @@ impl GameEncoder {
                 }
                 let index: u8 = i.try_into()?;
 
+                let gaussian = |mean: f64, x: f64| gaussian(self.height, self.dev, mean, x);
                 if self.is_white {
                     let (book, _) = convert_hashmap_to_weights(&self.white_hashmap);
                     book.encode(&mut self.bit_moves, &(index))?;
                     self.pos.play_unchecked(m);
-                    self.white_hashmap = adjust_haspmap(&self.white_hashmap, index as f64);
+                    self.white_hashmap = adjust_haspmap(&self.white_hashmap, gaussian, index as f64);
                 } else {
                     let (book, _) = convert_hashmap_to_weights(&self.black_hashmap);
                     book.encode(&mut self.bit_moves, &(index))?;
                     self.pos.play_unchecked(m);
-                    self.black_hashmap = adjust_haspmap(&self.black_hashmap, index as f64);
+                    self.black_hashmap = adjust_haspmap(&self.black_hashmap, gaussian, index as f64);
                 }
                 self.is_white = !self.is_white;
                 Ok(())
@@ -79,7 +83,16 @@ impl GameEncoder {
 }
 
 fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
-    let mut encoder = GameEncoder::new();
+    let mut encoder = GameEncoder::new(GAUSSIAN_HEIGHT, GAUSSIAN_DEV);
+    for san_plus in pgn.moves.iter() {
+        let m = san_plus.0.san.to_move(&encoder.pos)?;
+        encoder.encode(&m)?
+    }
+    Ok(encoder.bit_moves)
+}
+
+fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
+    let mut encoder = GameEncoder::new(height, dev);
     for san_plus in pgn.moves.iter() {
         let m = san_plus.0.san.to_move(&encoder.pos)?;
         encoder.encode(&m)?
@@ -105,20 +118,42 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     Ok(encoded_pgn)
 }
 
+pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
+    let mut headers = compress_headers(pgn)?;
+    let mut moves = compress_moves_custom(pgn, height, dev)?;
+
+    // if headers are empty, set bitvec to [1], otherwise set to signed i8 (1 byte)
+    let mut encoded_pgn;
+    if headers.is_empty() {
+        encoded_pgn = BitVec::from_elem(1, true);
+    } else {
+        encoded_pgn = i8_to_bit_vec(i8::try_from(headers.to_bytes().len())?);
+    }
+
+    // add the headers and moves to the encoded pgn
+    encoded_pgn.append(&mut headers);
+    encoded_pgn.append(&mut moves);
+    Ok(encoded_pgn)
+}
+
 struct GameDecoder {
     white_hashmap: HashMap<u8, u64>,
     black_hashmap: HashMap<u8, u64>,
     is_white: bool,
+    height: f64,
+    dev: f64,
     pub pos: Chess,
     pub moves: Vec<SanPlusWrapper>,
 }
 
 impl GameDecoder {
-    pub fn new() -> GameDecoder {
+    pub fn new(height: f64, dev: f64) -> GameDecoder {
         GameDecoder {
             white_hashmap: get_lichess_hashmap(),
             black_hashmap: get_lichess_hashmap(),
             is_white: true,
+            height, 
+            dev, 
             pos: Chess::default(),
             moves: Vec::new(),
         }
@@ -126,6 +161,8 @@ impl GameDecoder {
 
     fn decode_all(&mut self, move_bits: &BitVec) -> Result<()> {
         let mut move_bits_copy = move_bits.clone();
+
+        let gaussian = |mean: f64, x: f64| gaussian(self.height, self.dev, mean, x);
 
         // while we still have bits to decode
         loop {
@@ -149,9 +186,9 @@ impl GameDecoder {
             self.moves.push(san_plus_wrapper);
 
             if self.is_white {
-                self.white_hashmap = adjust_haspmap(&self.white_hashmap, index as f64);
+                self.white_hashmap = adjust_haspmap(&self.white_hashmap, gaussian, index as f64);
             } else {
-                self.black_hashmap = adjust_haspmap(&self.black_hashmap, index as f64);
+                self.black_hashmap = adjust_haspmap(&self.black_hashmap, gaussian, index as f64);
             }
             self.is_white = !self.is_white;
 
@@ -170,7 +207,13 @@ impl GameDecoder {
 }
 
 fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
-    let mut decoder = GameDecoder::new();
+    let mut decoder = GameDecoder::new(GAUSSIAN_HEIGHT, GAUSSIAN_DEV);
+    decoder.decode_all(move_bits)?;
+    Ok(decoder.moves)
+}
+
+fn decompress_moves_custom(move_bits: &BitVec, height: f64, dev: f64) -> Result<Vec<SanPlusWrapper>> {
+    let mut decoder = GameDecoder::new(height, dev);
     decoder.decode_all(move_bits)?;
     Ok(decoder.moves)
 }
@@ -188,6 +231,27 @@ pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
         Ok(PgnData {
             headers,
             moves: decompress_moves(&move_bits)?,
+        })
+    }
+}
+
+pub fn decompress_pgn_data_custom(
+    bit_vec: &BitVec,
+    height: f64,
+    dev: f64,
+) -> Result<PgnData> {
+    let (headers, header_bytes_len) = decompress_headers(bit_vec)?;
+    if header_bytes_len == 0 {
+        let move_bits = get_bitvec_slice(bit_vec, 1, bit_vec.len())?;
+        Ok(PgnData {
+            headers,
+            moves: decompress_moves_custom(&move_bits, height, dev)?,
+        })
+    } else {
+        let move_bits = get_bitvec_slice(bit_vec, header_bytes_len, bit_vec.len())?;
+        Ok(PgnData {
+            headers,
+            moves: decompress_moves_custom(&move_bits, height, dev)?,
         })
     }
 }
