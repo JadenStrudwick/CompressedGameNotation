@@ -1,4 +1,7 @@
-use cgn::{benchmark_utils::{collect_metrics, metrics_to_summary}, compression::{huffman, dynamic_huffman, bincode}};
+use cgn::{
+    benchmark_utils::{collect_metrics, metrics_to_summary},
+    compression::{bincode, dynamic_huffman, huffman},
+};
 use criterion::{criterion_group, criterion_main, Criterion};
 
 const N: usize = 1000;
@@ -6,20 +9,14 @@ const N: usize = 1000;
 /// Collects and prints metrics for the bincode_zlib compression strategy.
 fn bench_bincode(_c: &mut Criterion) {
     println!("[BENCHMARK] Collecting metrics for bincode...");
-    let metrics = collect_metrics(
-        bincode::compress_pgn_data, 
-        bincode::decompress_pgn_data, 
-        N);
+    let metrics = collect_metrics(bincode::compress_pgn_data, bincode::decompress_pgn_data, N);
     println!("{}", metrics_to_summary(metrics));
 }
 
 /// Collects and prints metrics for the huffman compression strategy.
 fn bench_huffman(_c: &mut Criterion) {
     println!("[BENCHMARK] Collecting metrics for huffman...");
-    let metrics = collect_metrics(
-        huffman::compress_pgn_data,
-        huffman::decompress_pgn_data,
-        N);
+    let metrics = collect_metrics(huffman::compress_pgn_data, huffman::decompress_pgn_data, N);
     println!("{}", metrics_to_summary(metrics));
 }
 
@@ -29,7 +26,8 @@ fn bench_dynamic_huffman(_c: &mut Criterion) {
     let metrics = collect_metrics(
         dynamic_huffman::compress_pgn_data,
         dynamic_huffman::decompress_pgn_data,
-        N);
+        N,
+    );
     println!("{}", metrics_to_summary(metrics));
 }
 

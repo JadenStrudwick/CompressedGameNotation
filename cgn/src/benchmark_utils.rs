@@ -1,11 +1,12 @@
+use crate::pgn_data::PgnData;
 use anyhow::Result;
 use bit_vec::BitVec;
-use crate::pgn_data::PgnData;
 use rayon::prelude::*;
 use std::{
+    fmt::{self, Display, Formatter},
     fs::File,
     io::{BufRead, BufReader},
-    str::FromStr, fmt::{Formatter, self, Display}, 
+    str::FromStr,
 };
 
 /// An iterator over the games in a PGN database file.
@@ -212,15 +213,15 @@ pub fn collect_metrics_custom(
         .expect("Failed to open PGN database file")
         .par_bridge()
         .take_any(n)
-        .map(|pgn_str| collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev))
+        .map(|pgn_str| {
+            collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev)
+        })
         .filter_map(|x| x.ok())
         .collect::<Vec<_>>()
 }
 
 /// Summarize the metrics for a compression strategy.
-pub fn metrics_to_summary(
-    metrics: Vec<Metrics>
-) -> Summary {
+pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
     if metrics.is_empty() {
         return Summary {
             avg_time_to_compress: 0.0,
@@ -230,7 +231,7 @@ pub fn metrics_to_summary(
             avg_bits_per_move: 0.0,
             avg_bits_per_move_excluding_headers: 0.0,
             compression_ratio: 0.0,
-        }
+        };
     }
 
     // compute averages
@@ -276,12 +277,32 @@ pub struct Summary {
 impl Display for Summary {
     /// Display the summary
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "Average time to compress: {} seconds\n", self.avg_time_to_compress)?;
-        write!(f, "Average time to decompress: {} seconds\n", self.avg_time_to_decompress)?;
-        write!(f, "Average compressed size: {} bits\n", self.avg_compressed_size)?;
-        write!(f, "Average decompressed size: {} bits\n", self.avg_decompressed_size)?;
-        write!(f, "Average bits per move: {}\n", self.avg_bits_per_move)?;
-        write!(f, "Average bits per move excluding headers: {}\n", self.avg_bits_per_move_excluding_headers)?;
-        write!(f, "Average compression ratio: {}\n", self.compression_ratio)
+        writeln!(
+            f,
+            "Average time to compress: {} seconds",
+            self.avg_time_to_compress
+        )?;
+        writeln!(
+            f,
+            "Average time to decompress: {} seconds",
+            self.avg_time_to_decompress
+        )?;
+        writeln!(
+            f,
+            "Average compressed size: {} bits",
+            self.avg_compressed_size
+        )?;
+        writeln!(
+            f,
+            "Average decompressed size: {} bits",
+            self.avg_decompressed_size
+        )?;
+        writeln!(f, "Average bits per move: {}", self.avg_bits_per_move)?;
+        writeln!(
+            f,
+            "Average bits per move excluding headers: {}",
+            self.avg_bits_per_move_excluding_headers
+        )?;
+        writeln!(f, "Average compression ratio: {}", self.compression_ratio)
     }
 }

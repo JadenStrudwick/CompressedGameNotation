@@ -34,8 +34,8 @@ fn fitness_function(indiv: &Individual) -> f64 {
         dev,
     );
     let summary = metrics_to_summary(metrics);
-    let score = summary.avg_bits_per_move_excluding_headers;
-    score
+
+    summary.avg_bits_per_move_excluding_headers
 }
 
 fn init_population(n: usize) -> Vec<(Individual, f64)> {
@@ -87,7 +87,7 @@ fn crossover(parent1: &Individual, parent2: &Individual) -> Individual {
 }
 
 // Possibly change
-fn mutate(indiv: &mut Individual) -> () {
+fn mutate(indiv: &mut Individual) {
     let mut rng = rand::thread_rng();
     if rng.gen_range(0.0..=1.0) < MUTATION_RATE {
         indiv.height = rng.gen_range(HEIGHT_MIN..=HEIGHT_MAX);
@@ -113,7 +113,7 @@ fn new_generation(population: Vec<(Individual, f64)>) -> Vec<(Individual, f64)> 
     children
         .into_iter()
         .par_bridge()
-        .map(|x| { 
+        .map(|x| {
             let fitness = fitness_function(&x);
             (x, fitness)
         })
@@ -122,7 +122,13 @@ fn new_generation(population: Vec<(Individual, f64)>) -> Vec<(Individual, f64)> 
 
 fn main() {
     let mut population = init_population(100);
-    let mut best = (Individual { height: 1.0, dev: 1.0 }, 10.0);
+    let mut best = (
+        Individual {
+            height: 1.0,
+            dev: 1.0,
+        },
+        10.0,
+    );
 
     for i in 0..100 {
         population = new_generation(population);
