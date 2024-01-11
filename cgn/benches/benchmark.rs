@@ -1,7 +1,7 @@
 use cgn::{benchmark_utils::{collect_metrics, metrics_to_summary}, compression::{huffman, dynamic_huffman, bincode}};
 use criterion::{criterion_group, criterion_main, Criterion};
 
-const N: usize = 1000;
+const N: usize = 10;
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
 fn bench_bincode(_c: &mut Criterion) {
