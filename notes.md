@@ -95,3 +95,9 @@ I NEED TO CHECK MY COMMENTS OVER
 Had a break over the holidays, and due to the CS324 game, but I am back now. I need to start working on the final compression scheme.
 
 However, I spent some time today just refamiliarizing myself with the codebase, and fixing a few explict 'as' casts that could be replaced with 'try_into' casts.
+
+# 11th of Janurary 2024
+
+I have implemented the third strategy, but now need to find the optimal height and deviation for the gaussian. I have written a straightfoward genetic algorithm to try and find the optimal value. I have discovered from this first run that the optimal height is likely between 1 to 25M and the optimal deviation is between 1 and 6.
+
+I am conducting another run of the GA with these new bounds.

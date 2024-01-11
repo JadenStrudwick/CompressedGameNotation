@@ -11,9 +11,9 @@ use rayon::iter::ParallelIterator;
 
 const N: usize = 10;
 const HEIGHT_MIN: f64 = 1.0;
-const HEIGHT_MAX: f64 = 225_883_932.0;
+const HEIGHT_MAX: f64 = 1_000_000.0;
 const DEV_MIN: f64 = 1.0;
-const DEV_MAX: f64 = 10.0;
+const DEV_MAX: f64 = 3.0;
 const MUTATION_RATE: f64 = 0.2;
 const TOURNAMENT_SIZE: usize = 2;
 
@@ -122,7 +122,7 @@ fn new_generation(population: Vec<(Individual, f64)>) -> Vec<(Individual, f64)> 
 
 fn main() {
     // accept height and dev as command line arguments to run a single benchmark
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
     if args.len() == 3 {
         let height = args[1].parse::<f64>().unwrap();
         let dev = args[2].parse::<f64>().unwrap();
