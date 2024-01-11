@@ -9,7 +9,7 @@ use rand::{thread_rng, Rng};
 use rayon::iter::ParallelBridge;
 use rayon::iter::ParallelIterator;
 
-const N: usize = 100;
+const N: usize = 10;
 const HEIGHT_MIN: f64 = 1.0;
 const HEIGHT_MAX: f64 = 225_883_932.0;
 const DEV_MIN: f64 = 1.0;
@@ -121,6 +121,22 @@ fn new_generation(population: Vec<(Individual, f64)>) -> Vec<(Individual, f64)> 
 }
 
 fn main() {
+    // accept height and dev as command line arguments to run a single benchmark
+    let args: Vec<String> = env::args().collect();
+    if args.len() == 3 {
+        let height = args[1].parse::<f64>().unwrap();
+        let dev = args[2].parse::<f64>().unwrap();
+        let metrics = collect_metrics_custom(
+            compress_pgn_data_custom,
+            decompress_pgn_data_custom,
+            1000,
+            height,    
+            dev,
+        );
+        println!("{}", metrics_to_summary(metrics));
+        return;
+    }
+
     let mut population = init_population(100);
     let mut best = (
         Individual {
@@ -130,7 +146,7 @@ fn main() {
         10.0,
     );
 
-    for i in 0..100 {
+    for i in 0..1000 {
         population = new_generation(population);
         population.sort_by(|x, y| x.1.partial_cmp(&y.1).unwrap());
 
