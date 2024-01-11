@@ -133,6 +133,58 @@ fn collect_single_metric(
     })
 }
 
+/// Collect a single metric for a compression strategy.
+fn collect_single_metric_custom(
+    pgn_str: &str,
+    compress_fn: fn(&PgnData, f64, f64) -> Result<BitVec>,
+    decompress_fn: fn(&BitVec, f64, f64) -> Result<PgnData>,
+    height: f64,
+    dev: f64,
+) -> Result<Metrics> {
+    let mut pgn_data = PgnData::from_str(pgn_str)?;
+
+    // if the game is empty, skip it
+    if pgn_data.moves.is_empty() {
+        return Err(anyhow::anyhow!("Game is empty"));
+    }
+
+    // time to compress
+    let start = std::time::Instant::now();
+    let compressed_data = compress_fn(&pgn_data, height, dev)?;
+    let end = std::time::Instant::now();
+    let time_to_compress = end.duration_since(start).as_secs_f64();
+
+    // compressed size
+    let compressed_size = compressed_data.len();
+
+    // time to decompress
+    let start = std::time::Instant::now();
+    let decompressed_data = decompress_fn(&compressed_data, height, dev)?;
+    let end = std::time::Instant::now();
+    let time_to_decompress = end.duration_since(start).as_secs_f64();
+
+    // decompressed size
+    let decompressed_size = decompressed_data.to_string().len() * 8;
+
+    // bits per move
+    let bits_per_move = compressed_size as f64 / pgn_data.moves.len() as f64;
+
+    // bits per move excluding headers
+    pgn_data.clear_headers();
+    let compressed_data_no_headers = compress_fn(&pgn_data, height, dev)?;
+    let bits_per_move_excluding_headers =
+        (compressed_data_no_headers.len()) as f64 / pgn_data.moves.len() as f64;
+
+    Ok(Metrics {
+        time_to_compress,
+        time_to_decompress,
+        compressed_size,
+        decompressed_size,
+        bits_per_move,
+        bits_per_move_excluding_headers,
+    })
+}
+
 /// Collect the metrics for a compression strategy.
 pub fn collect_metrics(
     compress_fn: fn(&PgnData) -> Result<BitVec>,
@@ -144,6 +196,23 @@ pub fn collect_metrics(
         .par_bridge()
         .take_any(n)
         .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
+        .filter_map(|x| x.ok())
+        .collect::<Vec<_>>()
+}
+
+/// Collect the metrics for a compression strategy.
+pub fn collect_metrics_custom(
+    compress_fn: fn(&PgnData, f64, f64) -> Result<BitVec>,
+    decompress_fn: fn(&BitVec, f64, f64) -> Result<PgnData>,
+    n: usize,
+    height: f64,
+    dev: f64,
+) -> Vec<Metrics> {
+    pgn_db_into_iter("./benches/lichessDB.pgn")
+        .expect("Failed to open PGN database file")
+        .par_bridge()
+        .take_any(n)
+        .map(|pgn_str| collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev))
         .filter_map(|x| x.ok())
         .collect::<Vec<_>>()
 }
