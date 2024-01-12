@@ -1,10 +1,10 @@
 use cgn::{
-    benchmark_utils::{collect_metrics, metrics_to_summary},
+    benchmark_utils::{collect_metrics, metrics_to_summary, ToTake},
     compression::{bincode, dynamic_huffman, huffman},
 };
 use criterion::{criterion_group, criterion_main, Criterion};
 
-const N: usize = 10;
+const N: ToTake = ToTake::N(100_000);
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
 fn bench_bincode(_c: &mut Criterion) {
