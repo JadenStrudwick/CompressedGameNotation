@@ -1,12 +1,13 @@
 use crate::pgn_data::PgnData;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
 use rayon::prelude::*;
 use std::{
     fmt::{self, Display, Formatter},
     fs::File,
     io::{BufRead, BufReader},
-    str::FromStr, time::Instant,
+    str::FromStr,
+    time::Instant,
 };
 
 /// An iterator over the games in a PGN database file.
@@ -210,7 +211,7 @@ pub fn collect_metrics(
     compress_fn: fn(&PgnData) -> Result<BitVec>,
     decompress_fn: fn(&BitVec) -> Result<PgnData>,
     db_path: &str,
-    n: &ToTake
+    n: &ToTake,
 ) -> Vec<Metrics> {
     if let ToTake::N(n) = n {
         pgn_db_into_iter(db_path)

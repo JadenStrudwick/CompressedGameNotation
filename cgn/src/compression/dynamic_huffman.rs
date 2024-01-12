@@ -213,7 +213,8 @@ impl GameDecoder {
             }
 
             // otherwise, remove the bitstring from the remaining bits
-            move_bits_copy = get_bitvec_slice(&move_bits_copy, bitstring.len(), move_bits_copy.len())?;
+            move_bits_copy =
+                get_bitvec_slice(&move_bits_copy, bitstring.len(), move_bits_copy.len())?;
         }
         Ok(())
     }

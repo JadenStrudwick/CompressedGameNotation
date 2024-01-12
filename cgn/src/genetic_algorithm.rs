@@ -1,10 +1,10 @@
 use cgn::benchmark_utils::{collect_metrics_custom, metrics_to_summary, ToTake};
 use cgn::compression::dynamic_huffman::compress_pgn_data_custom;
 use cgn::compression::dynamic_huffman::decompress_pgn_data_custom;
-use std::fs::File;
-use std::io::Write;
 use rand::{seq::SliceRandom, thread_rng, Rng};
 use rayon::iter::{ParallelBridge, ParallelIterator};
+use std::fs::File;
+use std::io::Write;
 
 /// Configuration for the genetic algorithm used to find the optimal height and dev values for the dynamic Huffman compression algorithm
 pub struct GeneticAlgorithmConfig {
@@ -40,16 +40,19 @@ pub fn genetic_algorithm(config: GeneticAlgorithmConfig) {
         population.sort_by(|x, y| x.1.partial_cmp(&y.1).unwrap());
 
         // write the individuals to the output file
-        population.iter().enumerate().for_each(|(rank, individual)| {
-            file.write_all(
-                format!(
-                    "Generation: {}, Rank: {}, Height: {}, Dev: {}, Fitness: {}\n",
-                    gen_num, rank, individual.0.height, individual.0.dev, individual.1
+        population
+            .iter()
+            .enumerate()
+            .for_each(|(rank, individual)| {
+                file.write_all(
+                    format!(
+                        "Generation: {}, Rank: {}, Height: {}, Dev: {}, Fitness: {}\n",
+                        gen_num, rank, individual.0.height, individual.0.dev, individual.1
+                    )
+                    .as_bytes(),
                 )
-                .as_bytes(),
-            )
-            .unwrap()
-        });
+                .unwrap()
+            });
     }
 }
 
@@ -76,7 +79,10 @@ fn init_population(config: &GeneticAlgorithmConfig) -> Vec<(Individual, f64)> {
 }
 
 /// Create a new generation of individuals using crossover and mutation of randomly selected parents
-fn create_new_generation(config: &GeneticAlgorithmConfig, population: Vec<(Individual, f64)>) -> Vec<(Individual, f64)> {
+fn create_new_generation(
+    config: &GeneticAlgorithmConfig,
+    population: Vec<(Individual, f64)>,
+) -> Vec<(Individual, f64)> {
     let mut rng = rand::thread_rng();
     let parents = select_parents(config, &population);
     let mut children = Vec::with_capacity(population.len() / 2);

@@ -10,14 +10,24 @@ const N: ToTake = ToTake::N(100_000);
 /// Collects and prints metrics for the bincode_zlib compression strategy.
 fn bench_bincode(_c: &mut Criterion) {
     println!("[BENCHMARK] Collecting metrics for bincode...");
-    let metrics = collect_metrics(bincode::compress_pgn_data, bincode::decompress_pgn_data, DB_PATH, N);
+    let metrics = collect_metrics(
+        bincode::compress_pgn_data,
+        bincode::decompress_pgn_data,
+        DB_PATH,
+        N,
+    );
     println!("{}", metrics_to_summary(metrics));
 }
 
 /// Collects and prints metrics for the huffman compression strategy.
 fn bench_huffman(_c: &mut Criterion) {
     println!("[BENCHMARK] Collecting metrics for huffman...");
-    let metrics = collect_metrics(huffman::compress_pgn_data, huffman::decompress_pgn_data, DB_PATH, N);
+    let metrics = collect_metrics(
+        huffman::compress_pgn_data,
+        huffman::decompress_pgn_data,
+        DB_PATH,
+        N,
+    );
     println!("{}", metrics_to_summary(metrics));
 }
 

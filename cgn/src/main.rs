@@ -1,18 +1,20 @@
 mod genetic_algorithm;
 use cgn::benchmark_utils::ToTake;
 use cgn::compression::bincode::{bincode_compress_pgn_str, bincode_decompress_pgn_str};
+use cgn::compression::dynamic_huffman::{
+    dynamic_huffman_compress_pgn_str, dynamic_huffman_decompress_pgn_str,
+};
 use cgn::compression::huffman::{huffman_compress_pgn_str, huffman_decompress_pgn_str};
-use cgn::compression::dynamic_huffman::{dynamic_huffman_compress_pgn_str, dynamic_huffman_decompress_pgn_str};
-use std::fs::File;
-use std::io::{Read, Write};
 use clap::{Parser, Subcommand};
 use genetic_algorithm::{genetic_algorithm, GeneticAlgorithmConfig};
+use std::fs::File;
+use std::io::{Read, Write};
 
 #[derive(Parser)]
-#[clap(name="cgn", version="0.1.0", author="Jaden M. Strudwick")]
+#[clap(name = "cgn", version = "0.1.0", author = "Jaden M. Strudwick")]
 struct Args {
     #[clap(subcommand)]
-    command: Commands
+    command: Commands,
 }
 
 #[derive(Subcommand)]
@@ -58,7 +60,7 @@ enum Commands {
         init_population: usize,
 
         /// Number of games to benchmark each individual on
-        #[clap(value_parser)]        
+        #[clap(value_parser)]
         number_of_games: ToTake,
 
         /// Number of generations to run the genetic algorithm for
@@ -103,9 +105,13 @@ fn main() {
     let cli = Args::parse();
 
     match cli.command {
-        Commands::Compress { optimization_level, input_path, output_path } => {
+        Commands::Compress {
+            optimization_level,
+            input_path,
+            output_path,
+        } => {
             // open and read the file into a string
-            let mut input_file = File::open(&input_path).unwrap();
+            let mut input_file = File::open(input_path).unwrap();
             let mut pgn_str = String::new();
             input_file.read_to_string(&mut pgn_str).unwrap();
 
@@ -118,12 +124,16 @@ fn main() {
             };
 
             // write the compressed PGN data to the output file
-            let mut output_file = File::create(&output_path).unwrap();
+            let mut output_file = File::create(output_path).unwrap();
             output_file.write_all(&compressed_pgn_data).unwrap();
-        },
-        Commands::Decompress { optimization_level, input_path, output_path } => {
+        }
+        Commands::Decompress {
+            optimization_level,
+            input_path,
+            output_path,
+        } => {
             // open and read the file into a string
-            let mut input_file = File::open(&input_path).unwrap();
+            let mut input_file = File::open(input_path).unwrap();
             let mut compressed_pgn_data = Vec::new();
             input_file.read_to_end(&mut compressed_pgn_data).unwrap();
 
@@ -136,10 +146,22 @@ fn main() {
             };
 
             // write the decompressed PGN data to the output file
-            let mut output_file = File::create(&output_path).unwrap();
-            output_file.write_all(pgn_data.to_string().as_bytes()).unwrap();
-        },
-        Commands::GenAlgo { input_db_path, output_path, number_of_games, init_population, generations, height_min, height_max, dev_min, dev_max, mutation_rate, tournament_size } => {
+            let mut output_file = File::create(output_path).unwrap();
+            output_file.write_all(pgn_data.as_bytes()).unwrap();
+        }
+        Commands::GenAlgo {
+            input_db_path,
+            output_path,
+            number_of_games,
+            init_population,
+            generations,
+            height_min,
+            height_max,
+            dev_min,
+            dev_max,
+            mutation_rate,
+            tournament_size,
+        } => {
             let config = GeneticAlgorithmConfig {
                 init_population,
                 number_of_games,
@@ -154,6 +176,6 @@ fn main() {
                 output_path,
             };
             genetic_algorithm(config);
-        },
+        }
     }
 }
