@@ -186,10 +186,23 @@ fn collect_single_metric_custom(
     })
 }
 
+#[derive(Clone)]
 /// A number of games to take from a PGN database. If `All`, take all games.
 pub enum ToTake {
     All,
     N(usize),
+}
+
+impl FromStr for ToTake {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "all" {
+            Ok(ToTake::All)
+        } else {
+            Ok(ToTake::N(s.parse()?))
+        }
+    }
 }
 
 /// Collect the metrics for a compression strategy. Only guaranteed to work with Lichess PGN databases.
