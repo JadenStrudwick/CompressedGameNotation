@@ -14,7 +14,7 @@ fn bench_bincode(_c: &mut Criterion) {
         bincode::compress_pgn_data,
         bincode::decompress_pgn_data,
         DB_PATH,
-        N,
+        &N,
     );
     println!("{}", metrics_to_summary(metrics));
 }
@@ -26,7 +26,7 @@ fn bench_huffman(_c: &mut Criterion) {
         huffman::compress_pgn_data,
         huffman::decompress_pgn_data,
         DB_PATH,
-        N,
+        &N,
     );
     println!("{}", metrics_to_summary(metrics));
 }
@@ -38,7 +38,7 @@ fn bench_dynamic_huffman(_c: &mut Criterion) {
         dynamic_huffman::compress_pgn_data,
         dynamic_huffman::decompress_pgn_data,
         DB_PATH,
-        N,
+        &N,
     );
     println!("{}", metrics_to_summary(metrics));
 }
