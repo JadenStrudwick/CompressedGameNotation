@@ -1,163 +1,159 @@
+mod genetic_algorithm;
 use cgn::benchmark_utils::ToTake;
-use rand::seq::SliceRandom;
+use cgn::compression::bincode::{bincode_compress_pgn_str, bincode_decompress_pgn_str};
+use cgn::compression::huffman::{huffman_compress_pgn_str, huffman_decompress_pgn_str};
+use cgn::compression::dynamic_huffman::{dynamic_huffman_compress_pgn_str, dynamic_huffman_decompress_pgn_str};
+use std::fs::File;
+use std::io::{Read, Write};
+use clap::{Parser, Subcommand};
+use genetic_algorithm::{genetic_algorithm, GeneticAlgorithmConfig};
 
-use cgn::benchmark_utils::collect_metrics_custom;
-use cgn::benchmark_utils::metrics_to_summary;
-use cgn::compression::dynamic_huffman::compress_pgn_data_custom;
-use cgn::compression::dynamic_huffman::decompress_pgn_data_custom;
-
-use rand::{thread_rng, Rng};
-use rayon::iter::ParallelBridge;
-use rayon::iter::ParallelIterator;
-
-const N: ToTake = ToTake::N(100);
-const HEIGHT_MIN: f64 =740_000.0;
-const HEIGHT_MAX: f64 = 755_000.0;
-const DEV_MIN: f64 = 2.53;
-const DEV_MAX: f64 = 2.59;
-const MUTATION_RATE: f64 = 0.2;
-const TOURNAMENT_SIZE: usize = 2;
-
-#[derive(Debug, Clone)]
-struct Individual {
-    height: f64,
-    dev: f64,
+#[derive(Parser)]
+#[clap(name="cgn", version="0.1.0", author="Jaden M. Strudwick")]
+struct Args {
+    #[clap(subcommand)]
+    command: Commands
 }
 
-fn fitness_function(indiv: &Individual) -> f64 {
-    let height = indiv.height;
-    let dev = indiv.dev;
-    let metrics = collect_metrics_custom(
-        compress_pgn_data_custom,
-        decompress_pgn_data_custom,
-        N,
-        height,
-        dev,
-    );
-    let summary = metrics_to_summary(metrics);
+#[derive(Subcommand)]
+enum Commands {
+    /// Compress a single PGN file
+    Compress {
+        /// Compression level (0-2)
+        #[clap(short, default_value = "2", value_parser = |s: &str| match s.parse::<u8>() {
+            Ok(n) if n <= 2 => Ok(n),
+            _ => Err(String::from("Optimization level must be between 0 and 2")),
+        })]
+        optimization_level: u8,
 
-    summary.avg_bits_per_move_excluding_headers
-}
+        /// Input file path
+        #[clap(value_parser)]
+        input_path: String,
 
-fn init_population(n: usize) -> Vec<(Individual, f64)> {
-    let mut population = Vec::with_capacity(n);
-    let mut rng = thread_rng();
+        /// Output file path
+        #[clap(value_parser)]
+        output_path: String,
+    },
+    /// Decompress a single PGN file
+    Decompress {
+        /// Compression level (0-2)
+        #[clap(short, default_value = "2", value_parser = |s: &str| match s.parse::<u8>() {
+            Ok(n) if n <= 2 => Ok(n),
+            _ => Err(String::from("Optimization level must be between 0 and 2")),
+        })]
+        optimization_level: u8,
 
-    for _ in 0..n {
-        let height = rng.gen_range(HEIGHT_MIN..=HEIGHT_MAX);
-        let dev = rng.gen_range(DEV_MIN..=DEV_MAX);
-        population.push(Individual { height, dev });
-    }
+        /// Input file path
+        #[clap(value_parser)]
+        input_path: String,
 
-    population
-        .into_iter()
-        .par_bridge()
-        .map(|x| {
-            let fitness = fitness_function(&x);
-            (x, fitness)
-        })
-        .collect()
-}
+        /// Output file path
+        #[clap(value_parser)]
+        output_path: String,
+    },
+    /// Run a genetic algorithm to find the optimal height and dev values for the dynamic Huffman compression algorithm. Used during development.
+    GenAlgo {
+        /// Initial population size
+        #[clap(value_parser)]
+        init_population: usize,
 
-/// Select parents using tournament selection
-fn select_parents(population: &Vec<(Individual, f64)>) -> Vec<&(Individual, f64)> {
-    let mut rng = rand::thread_rng();
-    let mut parents = Vec::with_capacity(population.len() / 2);
+        /// Number of games to benchmark each individual on
+        #[clap(value_parser)]        
+        number_of_games: ToTake,
 
-    for _ in 0..population.len() / 2 {
-        let mut tournament = Vec::with_capacity(TOURNAMENT_SIZE);
-        for _ in 0..TOURNAMENT_SIZE {
-            let indiv = population.choose(&mut rng).unwrap();
-            tournament.push(indiv);
-        }
+        /// Number of generations to run the genetic algorithm for
+        #[clap(value_parser)]
+        generations: u32,
 
-        // sort the tournament by fitness (ascending)
-        tournament.sort_by(|x, y| x.1.partial_cmp(&y.1).unwrap());
-        parents.push(tournament.remove(0));
-    }
+        /// Mutation rate (0.0-1.0)
+        #[clap(value_parser = |s: &str| s.parse::<f64>().map(|n| n.clamp(0.0, 1.0)))]
+        mutation_rate: f64,
 
-    parents
-}
+        /// Tournament size
+        #[clap(value_parser)]
+        tournament_size: usize,
 
-fn crossover(parent1: &Individual, parent2: &Individual) -> Individual {
-    let height = (parent1.height + parent2.height) / 2.0;
-    let dev = (parent1.dev + parent2.dev) / 2.0;
-    let mut child = Individual { height, dev };
-    mutate(&mut child);
-    child
-}
+        /// Minimum height value
+        #[clap(value_parser)]
+        height_min: f64,
 
-// Possibly change
-fn mutate(indiv: &mut Individual) {
-    let mut rng = rand::thread_rng();
-    if rng.gen_range(0.0..=1.0) < MUTATION_RATE {
-        indiv.height = rng.gen_range(HEIGHT_MIN..=HEIGHT_MAX);
-    }
-    if rng.gen_range(0.0..=1.0) < MUTATION_RATE {
-        indiv.dev = rng.gen_range(DEV_MIN..=DEV_MAX);
-    }
-}
+        /// Maximum height value
+        #[clap(value_parser)]
+        height_max: f64,
 
-/// Create a new generation of individuals using crossover and mutation of randomly selected parents
-fn new_generation(population: Vec<(Individual, f64)>) -> Vec<(Individual, f64)> {
-    let mut rng = rand::thread_rng();
-    let parents = select_parents(&population);
-    let mut children = Vec::with_capacity(population.len() / 2);
+        /// Minimum dev value
+        #[clap(value_parser)]
+        dev_min: f64,
 
-    for _ in 0..population.len() {
-        let parent1 = parents.choose(&mut rng).unwrap();
-        let parent2 = parents.choose(&mut rng).unwrap();
-        let child = crossover(&parent1.0, &parent2.0);
-        children.push(child);
-    }
+        /// Maximum dev value
+        #[clap(value_parser)]
+        dev_max: f64,
 
-    children
-        .into_iter()
-        .par_bridge()
-        .map(|x| {
-            let fitness = fitness_function(&x);
-            (x, fitness)
-        })
-        .collect()
+        /// Input database path (Lichess PGN database format required)
+        #[clap(value_parser)]
+        input_db_path: String,
+
+        /// Output file path for the genetic algorithm results
+        #[clap(value_parser)]
+        output_path: String,
+    },
 }
 
 fn main() {
-    // accept height and dev as command line arguments to run a single benchmark
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() == 3 {
-        let height = args[1].parse::<f64>().unwrap();
-        let dev = args[2].parse::<f64>().unwrap();
-        let metrics = collect_metrics_custom(
-            compress_pgn_data_custom,
-            decompress_pgn_data_custom,
-            ToTake::N(1000),
-            height,    
-            dev,
-        );
-        println!("{}", metrics_to_summary(metrics));
-        return;
-    }
+    let cli = Args::parse();
 
-    let mut population = init_population(100);
-    let mut best = (
-        Individual {
-            height: 1.0,
-            dev: 1.0,
+    match cli.command {
+        Commands::Compress { optimization_level, input_path, output_path } => {
+            // open and read the file into a string
+            let mut input_file = File::open(&input_path).unwrap();
+            let mut pgn_str = String::new();
+            input_file.read_to_string(&mut pgn_str).unwrap();
+
+            // compress the PGN data using the specified optimization level
+            let compressed_pgn_data = match optimization_level {
+                0 => bincode_compress_pgn_str(&pgn_str),
+                1 => huffman_compress_pgn_str(&pgn_str),
+                2 => dynamic_huffman_compress_pgn_str(&pgn_str),
+                _ => unreachable!(),
+            };
+
+            // write the compressed PGN data to the output file
+            let mut output_file = File::create(&output_path).unwrap();
+            output_file.write_all(&compressed_pgn_data).unwrap();
         },
-        10.0,
-    );
+        Commands::Decompress { optimization_level, input_path, output_path } => {
+            // open and read the file into a string
+            let mut input_file = File::open(&input_path).unwrap();
+            let mut compressed_pgn_data = Vec::new();
+            input_file.read_to_end(&mut compressed_pgn_data).unwrap();
 
-    for i in 0..1000 {
-        population = new_generation(population);
-        population.sort_by(|x, y| x.1.partial_cmp(&y.1).unwrap());
+            // decompress the PGN data using the specified optimization level
+            let pgn_data = match optimization_level {
+                0 => bincode_decompress_pgn_str(&compressed_pgn_data),
+                1 => huffman_decompress_pgn_str(&compressed_pgn_data),
+                2 => dynamic_huffman_decompress_pgn_str(&compressed_pgn_data),
+                _ => unreachable!(),
+            };
 
-        for (j, indiv) in population.iter().enumerate() {
-            println!("{} {}: {:?}", i, j, indiv);
-        }
-
-        if population[0].1 < best.1 {
-            println!("New best: {:?}", population[0]);
-            best = population.remove(0)
-        }
+            // write the decompressed PGN data to the output file
+            let mut output_file = File::create(&output_path).unwrap();
+            output_file.write_all(pgn_data.to_string().as_bytes()).unwrap();
+        },
+        Commands::GenAlgo { input_db_path, output_path, number_of_games, init_population, generations, height_min, height_max, dev_min, dev_max, mutation_rate, tournament_size } => {
+            let config = GeneticAlgorithmConfig {
+                init_population,
+                number_of_games,
+                generations,
+                mutation_rate,
+                tournament_size,
+                height_min,
+                height_max,
+                dev_min,
+                dev_max,
+                input_db_path,
+                output_path,
+            };
+            genetic_algorithm(config);
+        },
     }
 }

@@ -103,3 +103,9 @@ I have implemented the third strategy, but now need to find the optimal height a
 I am conducting another run of the GA with these new bounds.
 
 Output 7 was made using 100 iterations, not 10 like all the previous. All further runs will be done with 100 iterations.
+
+# 12th of Janurary 2024
+
+Just had an interesting problem with dynamic huffman. Since the string variation of the compression uses padding bytes at the end, the decoder would try to decompress the padding bytes, and we had no way to tell it to stop. To fix this, I added a check where if the game is a checkmate or stalemate, we stop decoding. 
+
+I also added clap and a nicer way to inferface with the library via the CLI.
