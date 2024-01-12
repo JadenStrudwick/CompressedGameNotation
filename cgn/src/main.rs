@@ -1,3 +1,4 @@
+use cgn::benchmark_utils::ToTake;
 use rand::seq::SliceRandom;
 
 use cgn::benchmark_utils::collect_metrics_custom;
@@ -9,11 +10,11 @@ use rand::{thread_rng, Rng};
 use rayon::iter::ParallelBridge;
 use rayon::iter::ParallelIterator;
 
-const N: usize = 10;
-const HEIGHT_MIN: f64 = 1.0;
-const HEIGHT_MAX: f64 = 1_000_000.0;
-const DEV_MIN: f64 = 1.0;
-const DEV_MAX: f64 = 3.0;
+const N: ToTake = ToTake::N(100);
+const HEIGHT_MIN: f64 =740_000.0;
+const HEIGHT_MAX: f64 = 755_000.0;
+const DEV_MIN: f64 = 2.53;
+const DEV_MAX: f64 = 2.59;
 const MUTATION_RATE: f64 = 0.2;
 const TOURNAMENT_SIZE: usize = 2;
 
@@ -129,7 +130,7 @@ fn main() {
         let metrics = collect_metrics_custom(
             compress_pgn_data_custom,
             decompress_pgn_data_custom,
-            1000,
+            ToTake::N(1000),
             height,    
             dev,
         );

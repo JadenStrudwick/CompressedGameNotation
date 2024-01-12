@@ -101,3 +101,5 @@ However, I spent some time today just refamiliarizing myself with the codebase, 
 I have implemented the third strategy, but now need to find the optimal height and deviation for the gaussian. I have written a straightfoward genetic algorithm to try and find the optimal value. I have discovered from this first run that the optimal height is likely between 1 to 25M and the optimal deviation is between 1 and 6.
 
 I am conducting another run of the GA with these new bounds.
+
+Output 7 was made using 100 iterations, not 10 like all the previous. All further runs will be done with 100 iterations.
