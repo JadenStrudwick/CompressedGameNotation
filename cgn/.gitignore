@@ -2,5 +2,5 @@ target/
 Cargo.lock
 Cargo.toml.orig
 Cargo.lock.orig
-lichessDB.pgn
+lichessDB*.pgn
 lcov.info
