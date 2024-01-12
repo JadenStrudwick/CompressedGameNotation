@@ -1,12 +1,12 @@
-use crate::pgn_data::PgnData;
-use anyhow::Result;
+use cgn::pgn_data::PgnData;
+use anyhow::{Result, anyhow};
 use bit_vec::BitVec;
 use rayon::prelude::*;
 use std::{
     fmt::{self, Display, Formatter},
     fs::File,
     io::{BufRead, BufReader},
-    str::FromStr,
+    str::FromStr, time::Instant,
 };
 
 /// An iterator over the games in a PGN database file.
@@ -62,7 +62,7 @@ impl<R: BufRead> Iterator for PgnDBIter<R> {
 }
 
 /// Opens a PGN database file and returns an iterator over the games in the database.
-fn pgn_db_into_iter(path: &str) -> Result<PgnDBIter<BufReader<File>>, std::io::Error> {
+fn pgn_db_into_iter(path: &str) -> Result<PgnDBIter<BufReader<File>>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     Ok(PgnDBIter::new(reader))
@@ -94,22 +94,22 @@ fn collect_single_metric(
 
     // if the game is empty, skip it
     if pgn_data.moves.is_empty() {
-        return Err(anyhow::anyhow!("Game is empty"));
+        return Err(anyhow!("Game is empty"));
     }
 
     // time to compress
-    let start = std::time::Instant::now();
+    let start = Instant::now();
     let compressed_data = compress_fn(&pgn_data)?;
-    let end = std::time::Instant::now();
+    let end = Instant::now();
     let time_to_compress = end.duration_since(start).as_secs_f64();
 
     // compressed size
     let compressed_size = compressed_data.len();
 
     // time to decompress
-    let start = std::time::Instant::now();
+    let start = Instant::now();
     let decompressed_data = decompress_fn(&compressed_data)?;
-    let end = std::time::Instant::now();
+    let end = Instant::now();
     let time_to_decompress = end.duration_since(start).as_secs_f64();
 
     // decompressed size
@@ -146,22 +146,22 @@ fn collect_single_metric_custom(
 
     // if the game is empty, skip it
     if pgn_data.moves.is_empty() {
-        return Err(anyhow::anyhow!("Game is empty"));
+        return Err(anyhow!("Game is empty"));
     }
 
     // time to compress
-    let start = std::time::Instant::now();
+    let start = Instant::now();
     let compressed_data = compress_fn(&pgn_data, height, dev)?;
-    let end = std::time::Instant::now();
+    let end = Instant::now();
     let time_to_compress = end.duration_since(start).as_secs_f64();
 
     // compressed size
     let compressed_size = compressed_data.len();
 
     // time to decompress
-    let start = std::time::Instant::now();
+    let start = Instant::now();
     let decompressed_data = decompress_fn(&compressed_data, height, dev)?;
-    let end = std::time::Instant::now();
+    let end = Instant::now();
     let time_to_decompress = end.duration_since(start).as_secs_f64();
 
     // decompressed size
@@ -186,19 +186,21 @@ fn collect_single_metric_custom(
     })
 }
 
+/// A number of games to take from a PGN database. If `All`, take all games.
 pub enum ToTake {
     All,
     N(usize),
 }
 
-/// Collect the metrics for a compression strategy.
+/// Collect the metrics for a compression strategy. Only guaranteed to work with Lichess PGN databases.
 pub fn collect_metrics(
     compress_fn: fn(&PgnData) -> Result<BitVec>,
     decompress_fn: fn(&BitVec) -> Result<PgnData>,
+    db_path: &str,
     n: ToTake
 ) -> Vec<Metrics> {
     if let ToTake::N(n) = n {
-        pgn_db_into_iter("./benches/lichessDB.pgn")
+        pgn_db_into_iter(db_path)
             .expect("Failed to open PGN database file")
             .par_bridge()
             .take_any(n)
@@ -206,7 +208,7 @@ pub fn collect_metrics(
             .filter_map(|x| x.ok())
             .collect::<Vec<_>>()
     } else {
-        pgn_db_into_iter("./benches/lichessDB.pgn")
+        pgn_db_into_iter(db_path)
             .expect("Failed to open PGN database file")
             .par_bridge()
             .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
@@ -215,16 +217,17 @@ pub fn collect_metrics(
     }
 }
 
-/// Collect the metrics for a compression strategy.
+/// Collect the metrics for a compression strategy. Only guaranteed to work with Lichess PGN databases.
 pub fn collect_metrics_custom(
     compress_fn: fn(&PgnData, f64, f64) -> Result<BitVec>,
     decompress_fn: fn(&BitVec, f64, f64) -> Result<PgnData>,
+    db_path: &str,
     n: ToTake,
     height: f64,
     dev: f64,
 ) -> Vec<Metrics> {
     if let ToTake::N(n) = n {
-        pgn_db_into_iter("./benches/lichessDB.pgn")
+        pgn_db_into_iter(db_path)
             .expect("Failed to open PGN database file")
             .par_bridge()
             .take_any(n)
@@ -234,7 +237,7 @@ pub fn collect_metrics_custom(
             .filter_map(|x| x.ok())
             .collect::<Vec<_>>()
     } else {
-        pgn_db_into_iter("./benches/lichessDB.pgn")
+        pgn_db_into_iter(db_path)
             .expect("Failed to open PGN database file")
             .par_bridge()
             .map(|pgn_str| {
