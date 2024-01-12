@@ -8,17 +8,17 @@ use rayon::iter::{ParallelBridge, ParallelIterator};
 
 /// Configuration for the genetic algorithm used to find the optimal height and dev values for the dynamic Huffman compression algorithm
 pub struct GeneticAlgorithmConfig {
-    input_db_path: String,
-    output_path: String,
-    number_of_games: ToTake,
-    init_population: usize,
-    generations: u32,
-    height_min: f64,
-    height_max: f64,
-    dev_min: f64,
-    dev_max: f64,
-    mutation_rate: f64,
-    tournament_size: usize,
+    pub init_population: usize,
+    pub number_of_games: ToTake,
+    pub generations: u32,
+    pub mutation_rate: f64,
+    pub tournament_size: usize,
+    pub height_min: f64,
+    pub height_max: f64,
+    pub dev_min: f64,
+    pub dev_max: f64,
+    pub input_db_path: String,
+    pub output_path: String,
 }
 
 /// An individual in the genetic algorithm
