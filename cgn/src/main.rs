@@ -19,7 +19,7 @@ struct Args {
 enum Commands {
     /// Compress a single PGN file
     Compress {
-        /// Compression level (0-2)
+        /// Optimization level (0-2)
         #[clap(short, default_value = "2", value_parser = |s: &str| match s.parse::<u8>() {
             Ok(n) if n <= 2 => Ok(n),
             _ => Err(String::from("Optimization level must be between 0 and 2")),
@@ -36,7 +36,7 @@ enum Commands {
     },
     /// Decompress a single PGN file
     Decompress {
-        /// Compression level (0-2)
+        /// Optimization level (0-2)
         #[clap(short, default_value = "2", value_parser = |s: &str| match s.parse::<u8>() {
             Ok(n) if n <= 2 => Ok(n),
             _ => Err(String::from("Optimization level must be between 0 and 2")),
