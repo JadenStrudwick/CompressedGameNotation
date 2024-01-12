@@ -64,4 +64,12 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let decompressed_pgn_str = decompressed_data.to_string();
         assert_eq!(pgn_str, decompressed_pgn_str);
     }
+
+    #[test]
+    fn bincode_pgn_str() {
+        let pgn_str = PGN_STR_EXAMPLE;
+        let compressed_data = bincode_compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = bincode_decompress_pgn_str(&compressed_data);
+        assert_eq!(pgn_str, decompressed_pgn_str);
+    }
 }
