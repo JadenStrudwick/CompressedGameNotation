@@ -1,4 +1,4 @@
-use cgn::pgn_data::PgnData;
+use crate::pgn_data::PgnData;
 use anyhow::{Result, anyhow};
 use bit_vec::BitVec;
 use rayon::prelude::*;

@@ -1,4 +1,4 @@
-use super::benchmark_utils::{collect_metrics_custom, metrics_to_summary, ToTake};
+use cgn::benchmark_utils::{collect_metrics_custom, metrics_to_summary, ToTake};
 use cgn::compression::dynamic_huffman::compress_pgn_data_custom;
 use cgn::compression::dynamic_huffman::decompress_pgn_data_custom;
 use std::fs::File;
