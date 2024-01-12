@@ -201,12 +201,19 @@ impl GameDecoder {
             // encode the move to learn the bitstring
             let mut bitstring = BitVec::new();
             book.encode(&mut bitstring, &i)?;
+
+            // if the bistring and remaining bits are equal, we are done
             if bitstring == move_bits_copy {
                 break;
-            } else {
-                move_bits_copy =
-                    get_bitvec_slice(&move_bits_copy, bitstring.len(), move_bits_copy.len())?;
             }
+
+            // if the game is over, we are done
+            if self.pos.is_checkmate() || self.pos.is_stalemate() {
+                break;
+            }
+
+            // otherwise, remove the bitstring from the remaining bits
+            move_bits_copy = get_bitvec_slice(&move_bits_copy, bitstring.len(), move_bits_copy.len())?;
         }
         Ok(())
     }
@@ -299,11 +306,28 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
 
     #[test]
     /// Tests if the compression is correct for a PGN string with no headers.
-    fn test_compress_pgn_str_no_headers() {
+    fn test_compress_pgn_data_no_headers() {
         let mut pgn_data = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         pgn_data.clear_headers();
         let compressed_data = compress_pgn_data(&pgn_data).unwrap();
         let decompressed_pgn_str = decompress_pgn_data(&compressed_data).unwrap();
         assert_eq!(pgn_data.to_string(), decompressed_pgn_str.to_string());
+    }
+
+    #[test]
+    fn test_compress_pgn_str() {
+        let pgn_str = PGN_STR_EXAMPLE;
+        let compressed_data = dynamic_huffman_compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = dynamic_huffman_decompress_pgn_str(&compressed_data);
+        assert_eq!(pgn_str, decompressed_pgn_str);
+    }
+
+    #[test]
+    fn test_compress_pgn_str_no_headers() {
+        let mut pgn_data = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
+        pgn_data.clear_headers();
+        let compressed_data = dynamic_huffman_compress_pgn_str(&pgn_data.to_string());
+        let decompressed_pgn_str = dynamic_huffman_decompress_pgn_str(&compressed_data);
+        assert_eq!(pgn_data.to_string(), decompressed_pgn_str);
     }
 }
