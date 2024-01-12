@@ -13,8 +13,8 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
-const GAUSSIAN_HEIGHT: f64 = 759_000.0;
-const GAUSSIAN_DEV: f64 = 2.5;
+const GAUSSIAN_HEIGHT: f64 = 742325.3537353727;
+const GAUSSIAN_DEV: f64 = 2.5635425103971308;
 
 fn gaussian(height: f64, dev: f64, mean: f64, x: f64) -> f64 {
     let b = -((x - mean).powi(2) / (2.0 * dev.powi(2)));
