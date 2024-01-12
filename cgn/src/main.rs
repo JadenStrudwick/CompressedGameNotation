@@ -123,6 +123,12 @@ fn main() {
                 _ => unreachable!(),
             };
 
+            // if the vector is empty, then the compression failed
+            if compressed_pgn_data.is_empty() {
+                println!("Compression failed");
+                return;
+            }
+
             // write the compressed PGN data to the output file
             let mut output_file = File::create(output_path).unwrap();
             output_file.write_all(&compressed_pgn_data).unwrap();
@@ -144,6 +150,12 @@ fn main() {
                 2 => dynamic_huffman_decompress_pgn_str(&compressed_pgn_data),
                 _ => unreachable!(),
             };
+
+            // if the string is empty, then the decompression failed
+            if pgn_data.is_empty() {
+                println!("Decompression failed");
+                return;
+            }
 
             // write the decompressed PGN data to the output file
             let mut output_file = File::create(output_path).unwrap();
