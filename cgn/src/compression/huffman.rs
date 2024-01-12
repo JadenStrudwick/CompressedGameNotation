@@ -174,6 +174,14 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     }
 
     #[test]
+    fn test_compress_pgn_str() {
+        let pgn_str = PGN_STR_EXAMPLE;
+        let compressed_data = huffman_compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = huffman_decompress_pgn_str(&compressed_data);
+        assert_eq!(pgn_str, decompressed_pgn_str);
+    }
+
+    #[test]
     /// Tests if the compression is correct for a PGN string with no headers.
     fn test_compress_pgn_str_no_headers() {
         let mut pgn_data = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
