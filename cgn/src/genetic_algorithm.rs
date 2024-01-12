@@ -7,8 +7,8 @@ use rand::{seq::SliceRandom, thread_rng, Rng};
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
 /// Configuration for the genetic algorithm used to find the optimal height and dev values for the dynamic Huffman compression algorithm
-struct GeneticAlgorithmConfig {
-    db_path: String,
+pub struct GeneticAlgorithmConfig {
+    input_db_path: String,
     output_path: String,
     number_of_games: ToTake,
     init_population: usize,
@@ -32,7 +32,7 @@ struct Individual {
 pub fn genetic_algorithm(config: GeneticAlgorithmConfig) {
     // create the initial population and create the output file
     let mut population = init_population(&config);
-    let mut file = File::create(config.output_path).unwrap();
+    let mut file = File::create(&config.output_path).unwrap();
 
     // run the genetic algorithm for the specified number of generations
     for gen_num in 0..config.generations {
@@ -153,8 +153,8 @@ fn fitness_function(config: &GeneticAlgorithmConfig, individual: &Individual) ->
     metrics_to_summary(collect_metrics_custom(
         compress_pgn_data_custom,
         decompress_pgn_data_custom,
-        &config.db_path,
-        config.number_of_games,
+        &config.input_db_path,
+        &config.number_of_games,
         individual.height,
         individual.dev,
     ))
