@@ -186,38 +186,63 @@ fn collect_single_metric_custom(
     })
 }
 
+pub enum ToTake {
+    All,
+    N(usize),
+}
+
 /// Collect the metrics for a compression strategy.
 pub fn collect_metrics(
     compress_fn: fn(&PgnData) -> Result<BitVec>,
     decompress_fn: fn(&BitVec) -> Result<PgnData>,
-    n: usize,
+    n: ToTake
 ) -> Vec<Metrics> {
-    pgn_db_into_iter("./benches/lichessDB.pgn")
-        .expect("Failed to open PGN database file")
-        .par_bridge()
-        .take_any(n)
-        .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
-        .filter_map(|x| x.ok())
-        .collect::<Vec<_>>()
+    if let ToTake::N(n) = n {
+        pgn_db_into_iter("./benches/lichessDB.pgn")
+            .expect("Failed to open PGN database file")
+            .par_bridge()
+            .take_any(n)
+            .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
+            .filter_map(|x| x.ok())
+            .collect::<Vec<_>>()
+    } else {
+        pgn_db_into_iter("./benches/lichessDB.pgn")
+            .expect("Failed to open PGN database file")
+            .par_bridge()
+            .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
+            .filter_map(|x| x.ok())
+            .collect::<Vec<_>>()
+    }
 }
 
 /// Collect the metrics for a compression strategy.
 pub fn collect_metrics_custom(
     compress_fn: fn(&PgnData, f64, f64) -> Result<BitVec>,
     decompress_fn: fn(&BitVec, f64, f64) -> Result<PgnData>,
-    n: usize,
+    n: ToTake,
     height: f64,
     dev: f64,
 ) -> Vec<Metrics> {
-    pgn_db_into_iter("./benches/lichessDB.pgn")
-        .expect("Failed to open PGN database file")
-        .par_bridge()
-        .take_any(n)
-        .map(|pgn_str| {
-            collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev)
-        })
-        .filter_map(|x| x.ok())
-        .collect::<Vec<_>>()
+    if let ToTake::N(n) = n {
+        pgn_db_into_iter("./benches/lichessDB.pgn")
+            .expect("Failed to open PGN database file")
+            .par_bridge()
+            .take_any(n)
+            .map(|pgn_str| {
+                collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev)
+            })
+            .filter_map(|x| x.ok())
+            .collect::<Vec<_>>()
+    } else {
+        pgn_db_into_iter("./benches/lichessDB.pgn")
+            .expect("Failed to open PGN database file")
+            .par_bridge()
+            .map(|pgn_str| {
+                collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev)
+            })
+            .filter_map(|x| x.ok())
+            .collect::<Vec<_>>()
+    }
 }
 
 /// Summarize the metrics for a compression strategy.
