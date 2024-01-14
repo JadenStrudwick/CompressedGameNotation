@@ -188,7 +188,7 @@ fn collect_single_metric_custom(
 }
 
 #[derive(Clone)]
-/// A number of games to take from a PGN database. If `All`, take all games.
+/// A number of games to take from a PGN database. If `all`, take all games.
 pub enum ToTake {
     All,
     N(usize),
@@ -202,6 +202,15 @@ impl FromStr for ToTake {
             Ok(ToTake::All)
         } else {
             Ok(ToTake::N(s.parse()?))
+        }
+    }
+}
+
+impl Display for ToTake {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            ToTake::All => write!(f, "all"),
+            ToTake::N(n) => write!(f, "{}", n),
         }
     }
 }

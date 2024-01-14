@@ -3,6 +3,7 @@ use cgn::compression::dynamic_huffman::compress_pgn_data_custom;
 use cgn::compression::dynamic_huffman::decompress_pgn_data_custom;
 use rand::{seq::SliceRandom, thread_rng, Rng};
 use rayon::iter::{ParallelBridge, ParallelIterator};
+use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io::Write;
 
@@ -21,6 +22,16 @@ pub struct GeneticAlgorithmConfig {
     pub output_path: String,
 }
 
+impl Display for GeneticAlgorithmConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "init_population: {}, number_of_games: {}, generations: {}, mutation_rate: {}, tournament_size: {}, height_min: {}, height_max: {}, dev_min: {}, dev_max: {}, input_db_path: {}, output_path: {}",
+            self.init_population, self.number_of_games, self.generations, self.mutation_rate, self.tournament_size, self.height_min, self.height_max, self.dev_min, self.dev_max, self.input_db_path, self.output_path
+        )
+    }
+}
+
 /// An individual in the genetic algorithm
 #[derive(Debug, Clone)]
 struct Individual {
@@ -33,6 +44,9 @@ pub fn genetic_algorithm(config: GeneticAlgorithmConfig) {
     // create the initial population and create the output file
     let mut population = init_population(&config);
     let mut file = File::create(&config.output_path).unwrap();
+
+    // write the genetic algorithm configuration to the output file
+    file.write_all(format!("{}\n", config).as_bytes()).unwrap();
 
     // run the genetic algorithm for the specified number of generations
     for gen_num in 0..config.generations {

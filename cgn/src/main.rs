@@ -59,7 +59,7 @@ enum Commands {
         #[clap(value_parser)]
         init_population: usize,
 
-        /// Number of games to benchmark each individual on
+        /// Number of games to benchmark each individual on. If set to 'all', then all games in the database will be used
         #[clap(value_parser)]
         number_of_games: ToTake,
 
