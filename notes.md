@@ -109,3 +109,124 @@ Output 7 was made using 100 iterations, not 10 like all the previous. All furthe
 Just had an interesting problem with dynamic huffman. Since the string variation of the compression uses padding bytes at the end, the decoder would try to decompress the padding bytes, and we had no way to tell it to stop. To fix this, I added a check where if the game is a checkmate or stalemate, we stop decoding. 
 
 I also added clap and a nicer way to inferface with the library via the CLI.
+
+## 14th of Janurary 2024
+
+Given the clap interface, I have decided to slightly refactor the format in which the genetic algorithm outputs its results. This is unfortunate, as I have already run some previous outputs through the GA, but I think it is worth it. I will begin my going through the previous outputs, and writing down their max-min and number of games, to produce new configs that represent them.
+
+- output.txt:
+  - init_population: 100
+  - number_of_games: 10
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 0.0
+  - height_max: 250_000_000
+  - deviation_min: 1
+  - deviation_max: 10
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output.txt"
+
+- output3.txt:
+  - init_population: 100
+  - number_of_games: 10
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 0
+  - height_max: 25_000_000
+  - deviation_min: 1
+  - deviation_max: 6
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output3.txt"
+
+- output4.txt:
+  - init_population: 100
+  - number_of_games: 10
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 0
+  - height_max: 1_000_000
+  - deviation_min: 1
+  - deviation_max: 3
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output4.txt"
+
+- output5.txt:
+  - init_population: 100
+  - number_of_games: 10
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 800_000
+  - height_max: 1_200_000
+  - deviation_min: 2.5
+  - deviation_max: 3.0
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output5.txt"
+
+- output6.txt:
+  - init_population: 100
+  - number_of_games: 10
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 900_000
+  - height_max: 1_200_000
+  - deviation_min: 2.5
+  - deviation_max: 4.5
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output6.txt"
+
+- output7.txt:
+  - init_population: 100
+  - number_of_games: 100
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 700_000
+  - height_max: 1_000_000
+  - deviation_min: 2.3
+  - deviation_max: 2.6
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output7.txt"
+
+- output8.txt:
+  - init_population: 100
+  - number_of_games: 100
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 700_000
+  - height_max: 800_000
+  - deviation_min: 2.55
+  - deviation_max: 2.65
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output8.txt"
+
+- output9.txt:
+  - init_population: 100
+  - number_of_games: 100
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 720_000
+  - height_max: 760_000
+  - deviation_min: 2.50
+  - deviation_max: 2.60
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output9.txt"
+
+- output10.txt
+  - init_population: 100
+  - number_of_games: 100
+  - genrations: 1000
+  - mutation_rate: 0.2
+  - tournament_size: 2
+  - height_min: 740_000
+  - height_max: 760_000
+  - deviation_min: 2.52
+  - deviation_max: 2.60
+  - input_db_path: "cgn/benches/lichessDB.pgn"
+  - output_path: "cgn/output9.txt"
