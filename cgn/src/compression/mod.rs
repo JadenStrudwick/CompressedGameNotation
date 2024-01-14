@@ -2,6 +2,7 @@
 pub mod bincode;
 pub mod dynamic_huffman;
 pub mod huffman;
+mod utils;
 
 /// Accepts a module that contains the following and exports them to WASM string versions.
 /// * compress_pgn_data(&PgnData) -> Result<BitVec>.

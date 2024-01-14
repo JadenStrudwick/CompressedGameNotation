@@ -1,8 +1,6 @@
-use crate::compression_utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
-use crate::compression_utils::score_move::{generate_moves, get_move_index};
-use crate::compression_utils::{
-    compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec,
-};
+use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
+use super::utils::score_move::{generate_moves, get_move_index};
+use super::utils::{compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec};
 use crate::export_to_wasm;
 use crate::pgn_data::{PgnData, SanPlusWrapper};
 use anyhow::{anyhow, Result};
