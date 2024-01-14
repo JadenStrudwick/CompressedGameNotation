@@ -18,7 +18,7 @@ const GAUSSIAN_DEV: f64 = 2.5635425103971308;
 
 fn gaussian(height: f64, dev: f64, mean: f64, x: f64) -> f64 {
     let b = -((x - mean).powi(2) / (2.0 * dev.powi(2)));
-    (height - 1.0) * b.exp() + 1.0
+    height * b.exp()
 }
 
 fn adjust_haspmap(
