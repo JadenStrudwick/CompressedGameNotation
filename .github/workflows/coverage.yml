@@ -2,23 +2,16 @@ name: Code Coverage
 
 on: [push]
 jobs:
-  test:
-    name: Code Coverage
+  build:
     runs-on: ubuntu-latest
-    container:
-      image: xd009642/tarpaulin:develop-nightly
-      options: --security-opt seccomp=unconfined
     defaults:
       run:
         working-directory: ./cgn
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
       - name: Generate code coverage
-        run: |
-          cargo +nightly tarpaulin --exclude-files benches/* --out cov.html
-
+        run: cargo +nightly tarpaulin --exclude-files benches/* --out cov.html
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
