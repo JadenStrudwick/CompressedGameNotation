@@ -13,14 +13,14 @@ jobs:
         working-directory: ./cgn
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Generate code coverage
         run: |
-          cargo +nightly tarpaulin --verbose --all-features --workspace --exclude-files benches/* src/compression/mod.rs --out xml
+          cargo +nightly tarpaulin --exclude-files benches/* --out cov.html
 
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v2
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          fail_ci_if_error: true
+          name: coverage
+          path: ./cgn/tarpaulin-report.html
