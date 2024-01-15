@@ -1,8 +1,8 @@
 #[cfg(not(tarpaulin_include))]
-
 mod benchmark;
 use benchmark::{bench, ToTake};
 
+#[cfg(not(tarpaulin_include))]
 mod genetic_algorithm;
 use genetic_algorithm::{genetic_algorithm, GeneticAlgorithmConfig};
 
@@ -116,8 +116,8 @@ enum Commands {
     },
 }
 
-/// The main function for the command line interface.
 #[cfg(not(tarpaulin_include))]
+/// The main function for the command line interface.
 fn main() {
     let cli = Args::parse();
 
