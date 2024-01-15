@@ -59,9 +59,6 @@ impl GameEncoder {
     pub fn encode(&mut self, m: &Move) -> Result<()> {
         match get_move_index(&self.pos, m) {
             Some(i) => {
-                if i > 255 {
-                    return Err(anyhow!("Move index exceeds maximum value"));
-                }
                 let index: u8 = i.try_into()?;
 
                 let gaussian = |mean: f64, x: f64| gaussian(self.height, self.dev, mean, x);
@@ -273,6 +270,7 @@ export_to_wasm!("dynamic_huffman", compress_pgn_data, decompress_pgn_data);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use shakmaty::{Square, Role};
 
     /// Example PGN string.
     pub const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
@@ -328,5 +326,58 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let compressed_data = dynamic_huffman_compress_pgn_str(&pgn_data.to_string());
         let decompressed_pgn_str = dynamic_huffman_decompress_pgn_str(&compressed_data);
         assert_eq!(pgn_data.to_string(), decompressed_pgn_str);
+    }
+
+    #[test]
+    /// Tests if the compression is correct for PGN structs with custom height and dev.
+    fn test_compress_pgn_data_custom() {
+        let pgn_str = PGN_STR_EXAMPLE;
+        let pgn_data = PgnData::from_str(pgn_str).unwrap();
+        let compressed_data = compress_pgn_data_custom(&pgn_data, 1000000.0, 1000000.0).unwrap();
+        let decompressed_data =
+            decompress_pgn_data_custom(&compressed_data, 1000000.0, 1000000.0).unwrap();
+        let decompressed_pgn_str = decompressed_data.to_string();
+        assert_eq!(pgn_str, decompressed_pgn_str);
+    }
+
+    #[test]
+    /// Tests if the compression is correct for a PGN string with no headers and custom height and dev.
+    fn test_compress_pgn_data_no_headers_custom() {
+        let mut pgn_data = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
+        pgn_data.clear_headers();
+        let compressed_data = compress_pgn_data_custom(&pgn_data, 1000000.0, 1000000.0).unwrap();
+        let decompressed_pgn_str =
+            decompress_pgn_data_custom(&compressed_data, 1000000.0, 1000000.0).unwrap();
+        assert_eq!(pgn_data.to_string(), decompressed_pgn_str.to_string());
+    }
+
+    #[test]
+    /// Test that encoding an invalid move is not possible
+    fn test_encode_invalid_move() {
+        let mut encoder = GameEncoder::new(GAUSSIAN_HEIGHT, GAUSSIAN_DEV);
+        let invalid_move = Move::Normal {
+            role: Role::King,
+            from: Square::A1,
+            to: Square::A2,
+            capture: None,
+            promotion: None,
+        };
+        assert!(encoder.encode(&invalid_move).is_err());
+    }
+
+    #[test]
+    /// Test that an invalid string cannot be compressed
+    fn invalid_pgn_str_compress() {
+        let pgn_str = "foo bar";
+        let compressed_data = dynamic_huffman_compress_pgn_str(pgn_str);
+        assert_eq!(compressed_data.len(), 0);
+    }
+
+    #[test]
+    /// Test that an invalid string cannot be decompressed
+    fn invalid_pgn_str_decompress() {
+        let compressed_data = vec![0, 1, 2, 3];
+        let decompressed_pgn_str = dynamic_huffman_decompress_pgn_str(&compressed_data);
+        assert_eq!(decompressed_pgn_str.len(), 0);
     }
 }

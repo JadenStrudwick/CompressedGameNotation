@@ -36,9 +36,6 @@ impl GameEncoder {
     pub fn encode(&mut self, m: &Move) -> Result<()> {
         match get_move_index(&self.pos, m) {
             Some(i) => {
-                if i > 255 {
-                    return Err(anyhow!("Move index exceeds maximum value"));
-                }
                 let index: u8 = i.try_into()?;
                 self.book.encode(&mut self.bit_moves, &(index))?;
                 self.pos.play_unchecked(m);
@@ -139,6 +136,7 @@ export_to_wasm!("huffman", compress_pgn_data, decompress_pgn_data);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use shakmaty::{Square, Role};
 
     /// Example PGN string.
     pub const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
@@ -204,5 +202,35 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         let compressed_pgn = compress_pgn_data(&pgn).unwrap();
         assert_eq!(compressed_pgn[0], false);
+    }
+
+    #[test]
+    /// Test that encoding an invalid move is not possible
+    fn test_encode_invalid_move() {
+        let mut encoder = GameEncoder::new();
+        let invalid_move = Move::Normal {
+            role: Role::King,
+            from: Square::A1,
+            to: Square::A2,
+            capture: None,
+            promotion: None,
+        };
+        assert!(encoder.encode(&invalid_move).is_err());
+    }
+
+    #[test]
+    /// Test that an invalid string cannot be compressed
+    fn invalid_pgn_str_compress() {
+        let pgn_str = "foo bar";
+        let compressed_data = huffman_compress_pgn_str(pgn_str);
+        assert_eq!(compressed_data.len(), 0);
+    }
+
+    #[test]
+    /// Test that an invalid string cannot be decompressed
+    fn invalid_pgn_str_decompress() {
+        let compressed_data = vec![0, 1, 2, 3];
+        let decompressed_pgn_str = huffman_decompress_pgn_str(&compressed_data);
+        assert_eq!(decompressed_pgn_str.len(), 0);
     }
 }

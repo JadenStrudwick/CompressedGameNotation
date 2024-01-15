@@ -75,6 +75,11 @@ impl PgnData {
     pub fn clear_headers(&mut self) {
         self.headers = PgnHeaders::new();
     }
+
+    /// Checks if the PgnData struct is empty.
+    pub fn is_empty(&self) -> bool {
+        self.headers.is_empty() && self.moves.is_empty()
+    }
 }
 
 impl Default for PgnData {
