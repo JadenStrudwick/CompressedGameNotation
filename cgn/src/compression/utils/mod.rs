@@ -145,4 +145,48 @@ mod tests {
         expected.push(true);
         assert_eq!(get_bitvec_slice(&bit_vec, 1, 3).unwrap(), expected);
     }
+
+    #[test]
+    /// Test that an invalid start index returns an error
+    fn test_get_bitvec_slice_invalid_start() {
+        let mut bit_vec = BitVec::new();
+        bit_vec.push(true);
+        bit_vec.push(false);
+        bit_vec.push(true);
+        bit_vec.push(false);
+        assert!(get_bitvec_slice(&bit_vec, 5, 8).is_err());
+    }
+
+    #[test]
+    /// Test that an invalid end index returns an error
+    fn test_get_bitvec_slice_invalid_end() {
+        let mut bit_vec = BitVec::new();
+        bit_vec.push(true);
+        bit_vec.push(false);
+        bit_vec.push(true);
+        bit_vec.push(false);
+        assert!(get_bitvec_slice(&bit_vec, 0, 5).is_err());
+    }
+
+    #[test]
+    /// Test that an invalid start and end index returns an error
+    fn test_get_bitvec_slice_invalid_start_and_end() {
+        let mut bit_vec = BitVec::new();
+        bit_vec.push(true);
+        bit_vec.push(false);
+        bit_vec.push(true);
+        bit_vec.push(false);
+        assert!(get_bitvec_slice(&bit_vec, 5, 8).is_err());
+    }
+
+    #[test]
+    /// Test that start index cannot be greater than end index
+    fn test_get_bitvec_slice_start_greater_than_end() {
+        let mut bit_vec = BitVec::new();
+        bit_vec.push(true);
+        bit_vec.push(false);
+        bit_vec.push(true);
+        bit_vec.push(false);
+        assert!(get_bitvec_slice(&bit_vec, 3, 2).is_err());
+    }
 }
