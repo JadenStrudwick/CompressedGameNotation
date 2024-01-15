@@ -202,4 +202,25 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let pgn_data = PgnData::from_str(pgn_str).unwrap();
         assert!(pgn_data.to_string().find("FOOBAR").is_none());
     }
+
+    #[test]
+    /// Tests if the default PgnHeaders struct is empty.
+    fn default_headers() {
+        let pgn_data = PgnHeaders::default();
+        assert_eq!(pgn_data.event, "");
+        assert_eq!(pgn_data.site, "");
+        assert_eq!(pgn_data.date, "");
+        assert_eq!(pgn_data.round, "");
+        assert_eq!(pgn_data.white, "");
+        assert_eq!(pgn_data.black, "");
+        assert_eq!(pgn_data.result, "");
+    }
+
+    #[test]
+    /// Tests if the default PgnData struct is empty.
+    fn default_pgn_data() {
+        let pgn_data = PgnData::default();
+        assert!(pgn_data.moves.is_empty());
+        assert!(pgn_data.headers.is_empty());
+    }
 }
