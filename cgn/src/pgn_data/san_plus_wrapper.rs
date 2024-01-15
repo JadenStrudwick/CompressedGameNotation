@@ -1,5 +1,5 @@
 use pgn_reader::SanPlus;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 use std::str::FromStr;
 
 /// A wrapper around SanPlus that implements Serialize and Deserialize.
@@ -23,8 +23,7 @@ impl<'de> Deserialize<'de> for SanPlusWrapper {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        Ok(SanPlusWrapper(
-            SanPlus::from_str(&s).map_err(serde::de::Error::custom)?,
-        ))
+        let san_plus = SanPlus::from_str(&s).map_err(Error::custom)?;
+        Ok(SanPlusWrapper(san_plus))
     }
 }

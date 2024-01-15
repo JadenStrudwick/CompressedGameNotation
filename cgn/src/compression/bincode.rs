@@ -1,4 +1,6 @@
-use crate::{export_to_wasm, pgn_data::PgnData};
+use crate::export_to_wasm;
+use crate::pgn_data::PgnData;
+
 use anyhow::Result;
 use bit_vec::BitVec;
 use std::str::FromStr;
@@ -62,5 +64,29 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let decompressed_data = decompress_pgn_data(&compressed_data).unwrap();
         let decompressed_pgn_str = decompressed_data.to_string();
         assert_eq!(pgn_str, decompressed_pgn_str);
+    }
+
+    #[test]
+    fn bincode_pgn_str() {
+        let pgn_str = PGN_STR_EXAMPLE;
+        let compressed_data = bincode_compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = bincode_decompress_pgn_str(&compressed_data);
+        assert_eq!(pgn_str, decompressed_pgn_str);
+    }
+
+    #[test]
+    /// Test that an invalid string cannot be compressed
+    fn invalid_pgn_str_compress() {
+        let pgn_str = "foo bar";
+        let compressed_data = bincode_compress_pgn_str(pgn_str);
+        assert_eq!(compressed_data.len(), 0);
+    }
+
+    #[test]
+    /// Test that an invalid string cannot be decompressed
+    fn invalid_pgn_str_decompress() {
+        let compressed_data = vec![0, 1, 2, 3];
+        let decompressed_pgn_str = bincode_decompress_pgn_str(&compressed_data);
+        assert_eq!(decompressed_pgn_str.len(), 0);
     }
 }

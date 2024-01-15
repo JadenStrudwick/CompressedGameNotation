@@ -75,6 +75,11 @@ impl PgnData {
     pub fn clear_headers(&mut self) {
         self.headers = PgnHeaders::new();
     }
+
+    /// Checks if the PgnData struct is empty.
+    pub fn is_empty(&self) -> bool {
+        self.headers.is_empty() && self.moves.is_empty()
+    }
 }
 
 impl Default for PgnData {
@@ -201,5 +206,26 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let pgn_str = PGN_STR_EXAMPLE_EXTRA_HEADER;
         let pgn_data = PgnData::from_str(pgn_str).unwrap();
         assert!(pgn_data.to_string().find("FOOBAR").is_none());
+    }
+
+    #[test]
+    /// Tests if the default PgnHeaders struct is empty.
+    fn default_headers() {
+        let pgn_data = PgnHeaders::default();
+        assert_eq!(pgn_data.event, "");
+        assert_eq!(pgn_data.site, "");
+        assert_eq!(pgn_data.date, "");
+        assert_eq!(pgn_data.round, "");
+        assert_eq!(pgn_data.white, "");
+        assert_eq!(pgn_data.black, "");
+        assert_eq!(pgn_data.result, "");
+    }
+
+    #[test]
+    /// Tests if the default PgnData struct is empty.
+    fn default_pgn_data() {
+        let pgn_data = PgnData::default();
+        assert!(pgn_data.moves.is_empty());
+        assert!(pgn_data.headers.is_empty());
     }
 }
