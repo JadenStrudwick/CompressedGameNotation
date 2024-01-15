@@ -1,8 +1,10 @@
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
 use super::utils::score_move::{generate_moves, get_move_index};
 use super::utils::{compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec};
+
 use crate::export_to_wasm;
 use crate::pgn_data::{PgnData, SanPlusWrapper};
+
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
 use pgn_reader::SanPlus;
@@ -10,6 +12,11 @@ use shakmaty::{Chess, Move, Position};
 use std::collections::HashMap;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
+
+/// This strategy extends the Huffman encoding strategy by using a dynamic Huffman tree.
+/// The tree is updated after each move is encoded. The tree is initialized with the
+/// Lichess opening book. The height and deviation of the Gaussian function used to
+/// update the weights of the Huffman tree.
 
 const GAUSSIAN_HEIGHT: f64 = 742325.3537353727;
 const GAUSSIAN_DEV: f64 = 2.5635425103971308;
