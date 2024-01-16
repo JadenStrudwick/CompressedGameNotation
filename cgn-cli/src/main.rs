@@ -7,10 +7,10 @@ mod genetic_algorithm;
 use genetic_algorithm::{genetic_algorithm, GeneticAlgorithmConfig};
 
 use cgn::compression::bincode::{bincode_compress_pgn_str, bincode_decompress_pgn_str};
-use cgn::compression::huffman::{huffman_compress_pgn_str, huffman_decompress_pgn_str};
 use cgn::compression::dynamic_huffman::{
     dynamic_huffman_compress_pgn_str, dynamic_huffman_decompress_pgn_str,
 };
+use cgn::compression::huffman::{huffman_compress_pgn_str, huffman_decompress_pgn_str};
 use clap::{Parser, Subcommand};
 use std::fs::File;
 use std::io::{Read, Write};

@@ -88,7 +88,11 @@ impl GameEncoder {
                 self.is_white = !self.is_white;
                 Ok(())
             }
-            None => Err(anyhow!("GameEncoder::encode() - Move {} is invalid for position {}", m, self.pos.board().to_string())),
+            None => Err(anyhow!(
+                "GameEncoder::encode() - Move {} is invalid for position {}",
+                m,
+                self.pos.board().to_string()
+            )),
         }
     }
 }
@@ -123,7 +127,6 @@ pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<
 pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     compress_pgn_data_custom(pgn, GAUSSIAN_HEIGHT, GAUSSIAN_DEV)
 }
-
 
 struct GameDecoder {
     white_hashmap: HashMap<u8, u64>,
@@ -163,13 +166,15 @@ impl GameDecoder {
             };
 
             // decode one move
-            let i = tree
-                .decoder(&move_bits_copy, 256)
-                .next()
-                .ok_or(anyhow!("GameDecoder::decode_all() - Failed to decode next move from tree"))?;
+            let i = tree.decoder(&move_bits_copy, 256).next().ok_or(anyhow!(
+                "GameDecoder::decode_all() - Failed to decode next move from tree"
+            ))?;
             let moves = generate_moves(&self.pos);
             let index: usize = i.try_into()?;
-            let m = moves.get(index).ok_or(anyhow!("GameDecoder::decode_all() - Failed to decode index {} into a move", index))?;
+            let m = moves.get(index).ok_or(anyhow!(
+                "GameDecoder::decode_all() - Failed to decode index {} into a move",
+                index
+            ))?;
             let san_plus = SanPlus::from_move_and_play_unchecked(&mut self.pos, m);
             let san_plus_wrapper = SanPlusWrapper(san_plus);
             self.moves.push(san_plus_wrapper);
@@ -258,7 +263,7 @@ export_to_wasm!("dynamic_huffman", compress_pgn_data, decompress_pgn_data);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shakmaty::{Square, Role};
+    use shakmaty::{Role, Square};
 
     /// Example PGN string.
     pub const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]

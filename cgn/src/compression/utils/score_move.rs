@@ -24,7 +24,10 @@ fn move_score(pos: &Chess, m: &Move) -> Result<PieceScore> {
     let move_value = move_pst_score(pos.turn(), m);
 
     let to_value = PieceScore::from(m.to());
-    let from_value = PieceScore::from(m.from().ok_or(anyhow::anyhow!("move_score() - Move {} has no 'from' square", m))?);
+    let from_value = PieceScore::from(m.from().ok_or(anyhow::anyhow!(
+        "move_score() - Move {} has no 'from' square",
+        m
+    ))?);
 
     Ok((promotion_score << 26)
         + (capture_score << 25)
@@ -91,7 +94,10 @@ fn move_pst_score(turn: Color, m: &Move) -> Result<PieceScore> {
     let to_score = pst_score(m.role().of(turn), m.to())?;
     let from_score = pst_score(
         m.role().of(turn),
-        m.from().ok_or(anyhow::anyhow!("move_pst_score() - Move {} has no 'from' square", m))?,
+        m.from().ok_or(anyhow::anyhow!(
+            "move_pst_score() - Move {} has no 'from' square",
+            m
+        ))?,
     )?;
     Ok(512 + to_score - from_score)
 }

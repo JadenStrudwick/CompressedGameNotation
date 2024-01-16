@@ -60,7 +60,12 @@ pub fn get_bitvec_slice(bit_vec: &BitVec, start: usize, end: usize) -> Result<Bi
 
     // check for invalid indices
     if (start > end) || (start >= len) || (end > len) {
-        return Err(anyhow!("get_bitvec_slice() - Invalid indices found, start: {}, end: {}, len: {}", start, end, len));
+        return Err(anyhow!(
+            "get_bitvec_slice() - Invalid indices found, start: {}, end: {}, len: {}",
+            start,
+            end,
+            len
+        ));
     }
 
     // push the bits into the result

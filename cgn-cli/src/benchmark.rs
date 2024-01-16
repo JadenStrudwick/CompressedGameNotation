@@ -1,7 +1,7 @@
-use cgn::pgn_data::PgnData;
-use cgn::compression::{bincode, dynamic_huffman, huffman};
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
+use cgn::compression::{bincode, dynamic_huffman, huffman};
+use cgn::pgn_data::PgnData;
 use rayon::prelude::*;
 use std::{
     fmt::{self, Display, Formatter},
@@ -149,7 +149,9 @@ fn collect_single_metric_custom(
 
     // if the game is empty, skip it
     if pgn_data.moves.is_empty() {
-        return Err(anyhow!("collect_single_metric_custom() - Game has no moves"));
+        return Err(anyhow!(
+            "collect_single_metric_custom() - Game has no moves"
+        ));
     }
 
     // time to compress
@@ -361,7 +363,6 @@ pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
         compression_ratio,
     }
 }
-
 
 /// Collects metrics for the specified compression and decompression functions.
 pub fn bench(n: ToTake, db_path: &str) {
