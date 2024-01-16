@@ -23,6 +23,7 @@ pub struct GeneticAlgorithmConfig {
 }
 
 impl Display for GeneticAlgorithmConfig {
+    /// Formats the GeneticAlgorithmConfig struct into a string
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

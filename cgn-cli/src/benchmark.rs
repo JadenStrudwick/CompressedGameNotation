@@ -18,6 +18,7 @@ struct PgnDBIter<R: BufRead> {
 }
 
 impl<R: BufRead> PgnDBIter<R> {
+    /// Creates a new PgnDBIter from a BufRead reader
     fn new(reader: R) -> Self {
         Self {
             reader,
@@ -96,7 +97,7 @@ fn collect_single_metric(
 
     // if the game is empty, skip it
     if pgn_data.moves.is_empty() {
-        return Err(anyhow!("Game is empty"));
+        return Err(anyhow!("collect_single_metric() - Game has no moves"));
     }
 
     // time to compress
@@ -148,7 +149,7 @@ fn collect_single_metric_custom(
 
     // if the game is empty, skip it
     if pgn_data.moves.is_empty() {
-        return Err(anyhow!("Game is empty"));
+        return Err(anyhow!("collect_single_metric_custom() - Game has no moves"));
     }
 
     // time to compress
@@ -198,6 +199,7 @@ pub enum ToTake {
 impl FromStr for ToTake {
     type Err = anyhow::Error;
 
+    /// Parse a string into a ToTake enum
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s == "all" {
             Ok(ToTake::All)
@@ -208,6 +210,7 @@ impl FromStr for ToTake {
 }
 
 impl Display for ToTake {
+    /// Display the ToTake enum
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             ToTake::All => write!(f, "all"),
@@ -216,7 +219,7 @@ impl Display for ToTake {
     }
 }
 
-/// Collect the metrics for a compression strategy. Only guaranteed to work with Lichess PGN databases.
+/// Collect the metrics for a compression strategy. Only guaranteed to work with Lichess PGN databases
 pub fn collect_metrics(
     compress_fn: fn(&PgnData) -> Result<BitVec>,
     decompress_fn: fn(&BitVec) -> Result<PgnData>,
@@ -272,49 +275,6 @@ pub fn collect_metrics_custom(
     }
 }
 
-/// Summarize the metrics for a compression strategy.
-pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
-    if metrics.is_empty() {
-        return Summary {
-            avg_time_to_compress: 0.0,
-            avg_time_to_decompress: 0.0,
-            avg_compressed_size: 0,
-            avg_decompressed_size: 0,
-            avg_bits_per_move: 0.0,
-            avg_bits_per_move_excluding_headers: 0.0,
-            compression_ratio: 0.0,
-        };
-    }
-
-    // compute averages
-    let avg_time_to_compress =
-        metrics.iter().map(|x| x.time_to_compress).sum::<f64>() / metrics.len() as f64;
-    let avg_time_to_decompress =
-        metrics.iter().map(|x| x.time_to_decompress).sum::<f64>() / metrics.len() as f64;
-    let avg_compressed_size =
-        metrics.iter().map(|x| x.compressed_size).sum::<usize>() / metrics.len();
-    let avg_decompressed_size =
-        metrics.iter().map(|x| x.decompressed_size).sum::<usize>() / metrics.len();
-    let avg_bits_per_move =
-        metrics.iter().map(|x| x.bits_per_move).sum::<f64>() / metrics.len() as f64;
-    let avg_bits_per_move_excluding_headers = metrics
-        .iter()
-        .map(|x| x.bits_per_move_excluding_headers)
-        .sum::<f64>()
-        / metrics.len() as f64;
-    let compression_ratio = avg_compressed_size as f64 / avg_decompressed_size as f64;
-
-    Summary {
-        avg_time_to_compress,
-        avg_time_to_decompress,
-        avg_compressed_size,
-        avg_decompressed_size,
-        avg_bits_per_move,
-        avg_bits_per_move_excluding_headers,
-        compression_ratio,
-    }
-}
-
 /// A summary of the metrics for a compression strategy
 pub struct Summary {
     pub avg_time_to_compress: f64,
@@ -358,6 +318,50 @@ impl Display for Summary {
         writeln!(f, "Average compression ratio: {}", self.compression_ratio)
     }
 }
+
+/// Summarize the metrics for a compression strategy.
+pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
+    if metrics.is_empty() {
+        return Summary {
+            avg_time_to_compress: 0.0,
+            avg_time_to_decompress: 0.0,
+            avg_compressed_size: 0,
+            avg_decompressed_size: 0,
+            avg_bits_per_move: 0.0,
+            avg_bits_per_move_excluding_headers: 0.0,
+            compression_ratio: 0.0,
+        };
+    }
+
+    // compute averages
+    let avg_time_to_compress =
+        metrics.iter().map(|x| x.time_to_compress).sum::<f64>() / metrics.len() as f64;
+    let avg_time_to_decompress =
+        metrics.iter().map(|x| x.time_to_decompress).sum::<f64>() / metrics.len() as f64;
+    let avg_compressed_size =
+        metrics.iter().map(|x| x.compressed_size).sum::<usize>() / metrics.len();
+    let avg_decompressed_size =
+        metrics.iter().map(|x| x.decompressed_size).sum::<usize>() / metrics.len();
+    let avg_bits_per_move =
+        metrics.iter().map(|x| x.bits_per_move).sum::<f64>() / metrics.len() as f64;
+    let avg_bits_per_move_excluding_headers = metrics
+        .iter()
+        .map(|x| x.bits_per_move_excluding_headers)
+        .sum::<f64>()
+        / metrics.len() as f64;
+    let compression_ratio = avg_compressed_size as f64 / avg_decompressed_size as f64;
+
+    Summary {
+        avg_time_to_compress,
+        avg_time_to_decompress,
+        avg_compressed_size,
+        avg_decompressed_size,
+        avg_bits_per_move,
+        avg_bits_per_move_excluding_headers,
+        compression_ratio,
+    }
+}
+
 
 /// Collects metrics for the specified compression and decompression functions.
 pub fn bench(n: ToTake, db_path: &str) {

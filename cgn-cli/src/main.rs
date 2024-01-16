@@ -16,13 +16,15 @@ use std::fs::File;
 use std::io::{Read, Write};
 
 #[derive(Parser)]
-#[clap(name = "cgn", version = "0.1.0", author = "Jaden M. Strudwick")]
+#[clap(name = "cgn", version = "0.1.0", author = "Jaden S")]
+/// A command line interface for the cgn library
 struct Args {
     #[clap(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand)]
+/// The commands for the command line interface
 enum Commands {
     /// Compress a single PGN file
     Compress {
