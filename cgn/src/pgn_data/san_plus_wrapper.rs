@@ -2,7 +2,7 @@ use pgn_reader::SanPlus;
 use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 use std::str::FromStr;
 
-/// A wrapper around SanPlus that implements Serialize and Deserialize.
+/// A wrapper around pgn_reader's SanPlus struct that implements Serialize and Deserialize.
 #[derive(Clone, Debug)]
 pub struct SanPlusWrapper(pub SanPlus);
 

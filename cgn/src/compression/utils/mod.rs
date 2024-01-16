@@ -7,8 +7,8 @@ use bit_vec::BitVec;
 use flate2::{read::ZlibDecoder, write::ZlibEncoder, Compression};
 
 /// Accepts a module that contains the following and exports them to WASM string versions.
-/// * compress_pgn_data(&PgnData) -> Result<BitVec>.
-/// * decompress_pgn_data(&BitVec) -> Result<PgnData>.
+/// * compress_pgn_data(&PgnData) -> Result&lt;BitVec&gt;
+/// * decompress_pgn_data(&BitVec) -> Result&lt;PgnData&gt;
 #[macro_export]
 macro_rules! export_to_wasm {
     ($module_name:literal, $compress_pgn_data:ident, $decompress_pgn_data:ident) => {

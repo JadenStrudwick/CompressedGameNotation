@@ -1,3 +1,7 @@
+//! This strategy extends the Huffman encoding strategy by using a dynamic Huffman tree.
+//! The tree is updated after each move is encoded. The height and deviation of a Gaussian 
+//! function used to update the weights of the Huffman tree.
+
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
 use super::utils::score_move::{generate_moves, get_move_index};
 use super::utils::{compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec};
@@ -12,11 +16,6 @@ use shakmaty::{Chess, Move, Position};
 use std::collections::HashMap;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
-
-/// This strategy extends the Huffman encoding strategy by using a dynamic Huffman tree.
-/// The tree is updated after each move is encoded. The tree is initialized with the
-/// Lichess opening book. The height and deviation of the Gaussian function used to
-/// update the weights of the Huffman tree.
 
 const GAUSSIAN_HEIGHT: f64 = 742325.3537353727;
 const GAUSSIAN_DEV: f64 = 2.5635425103971308;
@@ -106,6 +105,7 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
     Ok(encoder.bit_moves)
 }
 
+/// Compress a PGN file with custom height and dev
 pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
     let mut headers = compress_headers(pgn)?;
     let mut moves = compress_moves_custom(pgn, height, dev)?;
@@ -124,6 +124,7 @@ pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<
     Ok(encoded_pgn)
 }
 
+/// Compress a PGN file
 pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     compress_pgn_data_custom(pgn, GAUSSIAN_HEIGHT, GAUSSIAN_DEV)
 }
@@ -224,6 +225,7 @@ fn decompress_moves_custom(
     Ok(decoder.moves)
 }
 
+/// Decompress a PGN file
 pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
     let (headers, header_bytes_len) = decompress_headers(bit_vec)?;
     if header_bytes_len == 0 {
@@ -241,6 +243,7 @@ pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
     }
 }
 
+/// Compress a PGN string with custom height and dev
 pub fn decompress_pgn_data_custom(bit_vec: &BitVec, height: f64, dev: f64) -> Result<PgnData> {
     let (headers, header_bytes_len) = decompress_headers(bit_vec)?;
     if header_bytes_len == 0 {

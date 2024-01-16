@@ -1,3 +1,7 @@
+//! This strategy uses the huffman_compress crate to compress the moves of a PGN file
+//! using Huffman encoding. The headers are compressed using the same method as the
+//! bincode strategy.
+
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
 use super::utils::score_move::{generate_moves, get_move_index};
 use super::utils::{compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec};
@@ -12,10 +16,6 @@ use pgn_reader::SanPlus;
 use shakmaty::{Chess, Move, Position};
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
-
-/// This strategy uses the huffman_compress crate to compress the moves of a PGN file
-/// using Huffman encoding. The headers are compressed using the same method as the
-/// bincode strategy.
 
 /// Game encoder that encodes moves into a bit vector using Huffman encoding
 struct GameEncoder {

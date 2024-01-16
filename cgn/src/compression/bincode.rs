@@ -1,13 +1,13 @@
+//! This strategy uses the bincode crate to serialize the data and
+//! then compresses it using the flate2 crate's ZlibEncoder at the
+//! best compression level.
+
 use crate::export_to_wasm;
 use crate::pgn_data::PgnData;
 use anyhow::Result;
 use bit_vec::BitVec;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
-
-/// This strategy uses the bincode crate to serialize the data and
-/// then compresses it using the flate2 crate's ZlibEncoder at the
-/// best compression level.
 
 /// Compresses the PGN data using bincode and ZlibEncoder at the maximum compression level.
 pub fn compress_pgn_data(pgn_data: &PgnData) -> Result<BitVec> {
