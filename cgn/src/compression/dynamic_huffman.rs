@@ -68,7 +68,10 @@ impl GameEncoder {
             Some(i) => {
                 let index: u8 = i.try_into()?;
 
+                // gaussian function to adjust the weights of the Huffman tree
                 let gaussian = |mean: f64, x: f64| gaussian(self.height, self.dev, mean, x);
+
+                // adjust the weights of the Huffman tree depending on the current player
                 if self.is_white {
                     let (book, _) = convert_hashmap_to_weights(&self.white_hashmap);
                     book.encode(&mut self.bit_moves, &(index))?;
@@ -85,18 +88,9 @@ impl GameEncoder {
                 self.is_white = !self.is_white;
                 Ok(())
             }
-            None => Err(anyhow!("Move not found")),
+            None => Err(anyhow!("GameEncoder::encode() - Move {} is invalid for position {}", m, self.pos.board().to_string())),
         }
     }
-}
-
-fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
-    let mut encoder = GameEncoder::new(GAUSSIAN_HEIGHT, GAUSSIAN_DEV);
-    for san_plus in pgn.moves.iter() {
-        let m = san_plus.0.san.to_move(&encoder.pos)?;
-        encoder.encode(&m)?
-    }
-    Ok(encoder.bit_moves)
 }
 
 fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
@@ -106,24 +100,6 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
         encoder.encode(&m)?
     }
     Ok(encoder.bit_moves)
-}
-
-pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
-    let mut headers = compress_headers(pgn)?;
-    let mut moves = compress_moves(pgn)?;
-
-    // if headers are empty, set bitvec to [1], otherwise set to signed i8 (1 byte)
-    let mut encoded_pgn;
-    if headers.is_empty() {
-        encoded_pgn = BitVec::from_elem(1, true);
-    } else {
-        encoded_pgn = i8_to_bit_vec(i8::try_from(headers.to_bytes().len())?);
-    }
-
-    // add the headers and moves to the encoded pgn
-    encoded_pgn.append(&mut headers);
-    encoded_pgn.append(&mut moves);
-    Ok(encoded_pgn)
 }
 
 pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
@@ -143,6 +119,11 @@ pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<
     encoded_pgn.append(&mut moves);
     Ok(encoded_pgn)
 }
+
+pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
+    compress_pgn_data_custom(pgn, GAUSSIAN_HEIGHT, GAUSSIAN_DEV)
+}
+
 
 struct GameDecoder {
     white_hashmap: HashMap<u8, u64>,
@@ -185,10 +166,10 @@ impl GameDecoder {
             let i = tree
                 .decoder(&move_bits_copy, 256)
                 .next()
-                .ok_or(anyhow!("Failed to decode move"))?;
+                .ok_or(anyhow!("GameDecoder::decode_all() - Failed to decode next move from tree"))?;
             let moves = generate_moves(&self.pos);
             let index: usize = i.try_into()?;
-            let m = moves.get(index).ok_or(anyhow!("Move not found"))?;
+            let m = moves.get(index).ok_or(anyhow!("GameDecoder::decode_all() - Failed to decode index {} into a move", index))?;
             let san_plus = SanPlus::from_move_and_play_unchecked(&mut self.pos, m);
             let san_plus_wrapper = SanPlusWrapper(san_plus);
             self.moves.push(san_plus_wrapper);

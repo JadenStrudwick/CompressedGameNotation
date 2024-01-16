@@ -43,7 +43,7 @@ impl GameEncoder {
                 self.pos.play_unchecked(m);
                 Ok(())
             }
-            None => Err(anyhow!("Move not found")),
+            None => Err(anyhow!("GameEncoder::encode() - Move {} is invalid for position {}", m, self.pos.board().to_string())),
         }
     }
 }
@@ -99,7 +99,7 @@ impl GameDecoder {
         for i in self.tree.decoder(move_bits, 256) {
             let moves = generate_moves(&self.pos);
             let index: usize = i.try_into()?;
-            let m = moves.get(index).ok_or(anyhow!("Failed to decode move"))?;
+            let m = moves.get(index).ok_or(anyhow!("GameDecoder::decode_all() - Failed to decode index {} into a move", index))?;
             let san_plus = SanPlus::from_move_and_play_unchecked(&mut self.pos, m);
             let san_plus_wrapper = SanPlusWrapper(san_plus);
             self.moves.push(san_plus_wrapper);

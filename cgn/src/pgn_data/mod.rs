@@ -1,6 +1,5 @@
 mod pgn_vistor;
 mod san_plus_wrapper;
-
 pub use san_plus_wrapper::SanPlusWrapper;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
