@@ -83,46 +83,85 @@ async function run() {
 
   // handle compress copy button
   compressCopyButton.addEventListener('click', () => {
-    const compressed = dynamic_huffman_compress_pgn_str(compressInput.value);
-    navigator.clipboard.writeText(toHexString(compressed));
-    compressCopyButton.innerText = 'Copied!';
+    try {
+      const compressed = dynamic_huffman_compress_pgn_str(compressInput.value);
+      if (compressed.length === 0) {
+        compressCopyButton.innerText = 'Invalid PGN String!';
+        return;
+      }
+      navigator.clipboard.writeText(toHexString(compressed));
+      compressCopyButton.innerText = 'Copied!';
+    } catch (e) {
+      console.log(e);
+      compressCopyButton.innerText = 'Invalid PGN String!';
+    }
   });
 
   // handle compress download button
   compressDownloadButton.addEventListener('click', () => {
-    const compressed = dynamic_huffman_compress_pgn_str(compressInput.value);
-    const blob = new Blob([compressed], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'compressed.cgn';
-    a.click();
-    URL.revokeObjectURL(url);
-    compressDownloadButton.innerText = 'Downloaded!';
+    try {
+      const compressed = dynamic_huffman_compress_pgn_str(compressInput.value);
+      if (compressed.length === 0) {
+        compressDownloadButton.innerText = 'Invalid PGN String!';
+        return;
+      }
+      const blob = new Blob([compressed], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'compressed.cgn';
+      a.click();
+      URL.revokeObjectURL(url);
+      compressDownloadButton.innerText = 'Downloaded!';
+    } catch (e) {
+      console.log(e);
+      compressDownloadButton.innerText = 'Invalid PGN String!';
+    }
+
   });
 
   // handle decompress copy button
   decompressCopyButton.addEventListener('click', () => {
-    const decompressed = dynamic_huffman_decompress_pgn_str(
-      toUint8Array(decompressInput.value)
-    );
-    navigator.clipboard.writeText(decompressed);
-    decompressCopyButton.innerText = 'Copied!';
+    try {
+      const decompressed = dynamic_huffman_decompress_pgn_str(
+        toUint8Array(decompressInput.value)
+      );
+      if (decompressed.length === 0) {
+        decompressCopyButton.innerText = 'Invalid Hex String!';
+        return;
+      }
+      navigator.clipboard.writeText(decompressed);
+      decompressCopyButton.innerText = 'Copied!';
+    } catch (e) {
+      console.log(e);
+      decompressCopyButton.innerText = 'Invalid Hex String!';
+    }
   });
 
   // handle decompress download button
   decompressDownloadButton.addEventListener('click', () => {
-    const decompressed = dynamic_huffman_decompress_pgn_str(
-      toUint8Array(decompressInput.value)
-    );
-    const blob = new Blob([decompressed], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'decompressed.pgn';
-    a.click();
-    URL.revokeObjectURL(url);
-    decompressDownloadButton.innerText = 'Downloaded!';
+    try {
+
+      const decompressed = dynamic_huffman_decompress_pgn_str(
+        toUint8Array(decompressInput.value)
+      );
+      console.log(decompressed);
+      if (decompressed.length === 0) {
+        decompressDownloadButton.innerText = 'Invalid Hex String!';
+        return;
+      }
+      const blob = new Blob([decompressed], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'decompressed.pgn';
+      a.click();
+      URL.revokeObjectURL(url);
+      decompressDownloadButton.innerText = 'Downloaded!';
+    } catch (e) {
+      console.log(e);
+      decompressDownloadButton.innerText = 'Invalid Hex String!';
+    }
   });
 }
 run();
