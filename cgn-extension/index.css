@@ -22,6 +22,7 @@ button {
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
+  font-family: monospace;
 }
 
 .container {
