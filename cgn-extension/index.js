@@ -66,13 +66,13 @@ decompressInput.addEventListener('drop', (e) => {
 
 // Handle mouse leave
 compressCopyButton.addEventListener('mouseleave', () => {
-  compressCopyButton.innerText = 'Copy (Hexadecimal)';
+  compressCopyButton.innerText = 'Copy Hex String';
 });
 compressDownloadButton.addEventListener('mouseleave', () => {
-  compressDownloadButton.innerText = 'Download Compressed File';
+  compressDownloadButton.innerText = 'Download CGN File';
 });
 decompressCopyButton.addEventListener('mouseleave', () => {
-  decompressCopyButton.innerText = 'Copy (PGN Content)';
+  decompressCopyButton.innerText = 'Copy PGN String';
 });
 decompressDownloadButton.addEventListener('mouseleave', () => {
   decompressDownloadButton.innerText = 'Download PGN File';
