@@ -1,6 +1,13 @@
 # Compressed Game Notation
 3rd Year Project for University of Warwick Computer Science
 
+## Todo
+- [ ] Mention simulated annealing approach in the report
+- [ ] Look into opening compression
+- [ ] Throw errors in the to_bit_vec functions if the number won't fit in the given number of bits
+- [ ] Try compressing the final huffman output 
+- [ ] Write some some of the report and research possible 4th technique for week 4
+
 ## Journal
 
 ### 31st of October 2023
