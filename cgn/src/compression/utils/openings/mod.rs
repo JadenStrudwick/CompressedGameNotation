@@ -31,12 +31,15 @@ fn extract_openings(tsv_contents: &str) -> Vec<String> {
   for line in tsv_contents.lines() {
     let mut line = line.split("\t");
 
-    // skip the first two columns and get the pgn string
-    let pgn_str = line.nth(2).unwrap();
-
-    // only add the opening if it is long enough
-    if pgn_str.split_ascii_whitespace().count() >= MIN_OPENING_LENGTH {
-      openings.push(pgn_str.to_string());
+    // skip the first two columns
+    match line.nth(2) {
+      Some(pgn_str) => {
+        // only add the opening if it is long enough
+        if pgn_str.split_ascii_whitespace().count() >= MIN_OPENING_LENGTH {
+          openings.push(pgn_str.to_string());
+        }
+      },
+      None => continue,
     }
   }
   openings

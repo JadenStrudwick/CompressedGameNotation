@@ -27,14 +27,18 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
 
     // get the pgn_moves and opening trie
     let pgn_str = pgn.to_string();
-    let pgn_moves = pgn_str.split("]\n\n").nth(1).unwrap();
+    let pgn_moves = pgn_str.split("]\n\n").nth(1).ok_or(anyhow!(
+        "compress_moves() - Failed to get moves from PGN string {}",
+        pgn_str
+    ))?;
     let trie = construct_trie_and_hashmap();
 
     // check for a prefix match with the opening trie
     let matches = trie.0.common_prefix_search(pgn_moves);
     let matches_strings = matches
         .iter()
-        .map(|x| str::from_utf8(x).unwrap())
+        .map(|x| str::from_utf8(x))
+        .filter_map(Result::ok)
         .collect::<Vec<&str>>(); 
 
     // if there are no matches, then return true (1 bit) and then the rest of the compressed moves
@@ -42,8 +46,13 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
         bit_moves.push(true);
     } else {
         // get the longest match
-        let longest_match = matches_strings.into_iter().max_by(|x, y| x.len().cmp(&y.len())).unwrap();
-        let mut longest_match_bits = trie.1.get(longest_match).unwrap().clone();
+        let longest_match = matches_strings.into_iter().max_by(|x, y| x.len().cmp(&y.len())).ok_or(
+            anyhow!("compress_moves() - Failed to get longest match from matches_strings"),
+        )?;
+        let mut longest_match_bits = trie.1.get(longest_match).ok_or(anyhow!(
+            "compress_moves() - Failed to retrieve bits for longest match {} from hashmap",
+            longest_match
+        ))?.clone();
 
         // add false (1 bit) to the bit vector and then the compressed opening (12 bits)
         bit_moves.push(false);
@@ -117,7 +126,9 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
     } else {
         // otherwise decode the opening
         let opening_bits = get_bitvec_slice(move_bits, 1, 13)?;
-        let opening_string = trie.1.iter().find(|(_, v)| **v == opening_bits).unwrap().0;
+        let opening_string = trie.1.iter().find(|(_, v)| **v == opening_bits).ok_or(
+            anyhow!("decompress_moves() - Failed to find opening bits in hashmap"),
+        )?.0;
 
         // play the opening moves so that we can decode the rest of the moves after the opening
         for san_str in opening_string.split(" ") {
