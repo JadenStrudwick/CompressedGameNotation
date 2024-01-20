@@ -1,6 +1,6 @@
 //! Compression algorithms for PGN data.
-//! 
-//! Order of compression algorithms from most efficient to least efficient 
+//!
+//! Order of compression algorithms from most efficient to least efficient
 //! 1. Opening Huffman coding
 //! 2. Dynamic Huffman coding
 //! 3. Huffman coding

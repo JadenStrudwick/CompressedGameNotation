@@ -1,5 +1,5 @@
 //! This strategy extends the Huffman encoding strategy by using a dynamic Huffman tree.
-//! The tree is updated after each move is encoded. The height and deviation of a Gaussian 
+//! The tree is updated after each move is encoded. The height and deviation of a Gaussian
 //! function used to update the weights of the Huffman tree.
 
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
@@ -28,11 +28,7 @@ fn gaussian(height: f64, dev: f64, mean: f64, x: f64) -> f64 {
 }
 
 /// Update the weights of the Huffman tree using a Gaussian function
-fn adjust_haspmap(
-    hashmap: &mut HashMap<u8, u64>,
-    gaussian: impl Fn(f64, f64) -> f64,
-    mean: f64,
-) {
+fn adjust_haspmap(hashmap: &mut HashMap<u8, u64>, gaussian: impl Fn(f64, f64) -> f64, mean: f64) {
     for (key, value) in hashmap.iter_mut() {
         let scale_factor = gaussian(mean, *key as f64);
         *value = (*value as f64 + scale_factor) as u64;
@@ -59,8 +55,8 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
                 // gaussian function to adjust the weights of the Huffman tree
                 let gaussian = |mean: f64, x: f64| gaussian(height, dev, mean, x);
 
-                // get the hashmap for the current player 
-                let hashmap= if is_white {
+                // get the hashmap for the current player
+                let hashmap = if is_white {
                     &mut white_hashmap
                 } else {
                     &mut black_hashmap
@@ -128,7 +124,7 @@ fn decompress_moves_custom(
 
     // while we still have bits to decode
     loop {
-        // get the hashmap for the current player 
+        // get the hashmap for the current player
         let current_hasp_map = if is_white {
             &mut white_hashmap
         } else {
@@ -155,7 +151,7 @@ fn decompress_moves_custom(
         let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
         moves.push(SanPlusWrapper(san_plus));
 
-        // adjust the weights of the Huffman coding 
+        // adjust the weights of the Huffman coding
         adjust_haspmap(current_hasp_map, gaussian, index as f64);
 
         // flip the player

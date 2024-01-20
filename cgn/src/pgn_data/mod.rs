@@ -53,7 +53,7 @@ impl Default for PgnHeaders {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 /// PGN data struct that holds the headers and moves of a PGN game.
 /// Only stores the data required for PGN 'reduced export format'.
-/// 
+///
 /// A PGN game is in 'reduced export format' if abide by the following rules:
 /// 1) There are no comments.
 /// 2) Only the 7 mandatory tags are used (Event, Site, Date, Round, White, Black, Result).

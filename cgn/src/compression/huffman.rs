@@ -33,7 +33,13 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
                 book.encode(&mut bit_moves, &(index))?;
                 pos.play_unchecked(&san_move);
             }
-            None => return Err(anyhow!("compress_moves() - Invalid move {} for position {}", san_move, pos.board().to_string())),
+            None => {
+                return Err(anyhow!(
+                    "compress_moves() - Invalid move {} for position {}",
+                    san_move,
+                    pos.board().to_string()
+                ))
+            }
         }
     }
 

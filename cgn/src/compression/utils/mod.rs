@@ -1,6 +1,6 @@
 pub mod huffman_codes;
-pub mod score_move;
 pub mod openings;
+pub mod score_move;
 use crate::pgn_data::{PgnData, PgnHeaders};
 use anyhow::{anyhow, Result};
 use bincode::serialize_into;

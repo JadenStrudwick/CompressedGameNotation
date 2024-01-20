@@ -3,8 +3,8 @@
 //! moves are encoded using Huffman encoding.
 
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
-use super::utils::score_move::{generate_moves, get_move_index};
 use super::utils::openings::construct_trie_and_hashmap;
+use super::utils::score_move::{generate_moves, get_move_index};
 use super::utils::{compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec};
 
 use crate::export_to_wasm;
@@ -12,10 +12,10 @@ use crate::pgn_data::{PgnData, SanPlusWrapper};
 
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
-use pgn_reader::{SanPlus, San};
+use pgn_reader::{San, SanPlus};
 use shakmaty::{Chess, Position};
-use std::str::FromStr;
 use std::str;
+use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
 /// Encode the moves of a PGN file using Huffman encoding and a trie for the opening moves
@@ -39,20 +39,27 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
         .iter()
         .map(|x| str::from_utf8(x))
         .filter_map(Result::ok)
-        .collect::<Vec<&str>>(); 
+        .collect::<Vec<&str>>();
 
     // if there are no matches, then return true (1 bit) and then the rest of the compressed moves
     if matches.is_empty() {
         bit_moves.push(true);
     } else {
         // get the longest match
-        let longest_match = matches_strings.into_iter().max_by(|x, y| x.len().cmp(&y.len())).ok_or(
-            anyhow!("compress_moves() - Failed to get longest match from matches_strings"),
-        )?;
-        let mut longest_match_bits = trie.1.get(longest_match).ok_or(anyhow!(
-            "compress_moves() - Failed to retrieve bits for longest match {} from hashmap",
-            longest_match
-        ))?.clone();
+        let longest_match = matches_strings
+            .into_iter()
+            .max_by(|x, y| x.len().cmp(&y.len()))
+            .ok_or(anyhow!(
+                "compress_moves() - Failed to get longest match from matches_strings"
+            ))?;
+        let mut longest_match_bits = trie
+            .1
+            .get(longest_match)
+            .ok_or(anyhow!(
+                "compress_moves() - Failed to retrieve bits for longest match {} from hashmap",
+                longest_match
+            ))?
+            .clone();
 
         // add false (1 bit) to the bit vector and then the compressed opening (12 bits)
         bit_moves.push(false);
@@ -65,7 +72,7 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
                     let m = san.to_move(&pos)?;
                     pos.play_unchecked(&m);
                     opening_move_count += 1;
-                },
+                }
                 Err(_) => continue,
             }
         }
@@ -81,12 +88,14 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
                 let index: u8 = i.try_into()?;
                 book.encode(&mut bit_moves, &(index))?;
                 pos.play_unchecked(&m);
-            },
-            None => return Err(anyhow!(
-                "GameEncoder::encode() - Move {} is invalid for position {}",
-                m,
-                pos.board().to_string()
-            )),
+            }
+            None => {
+                return Err(anyhow!(
+                    "GameEncoder::encode() - Move {} is invalid for position {}",
+                    m,
+                    pos.board().to_string()
+                ))
+            }
         }
     }
 
@@ -125,9 +134,14 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
     } else {
         // otherwise decode the opening
         let opening_bits = get_bitvec_slice(move_bits, 1, 13)?;
-        let opening_string = trie.1.iter().find(|(_, v)| **v == opening_bits).ok_or(
-            anyhow!("decompress_moves() - Failed to find opening bits in hashmap"),
-        )?.0;
+        let opening_string = trie
+            .1
+            .iter()
+            .find(|(_, v)| **v == opening_bits)
+            .ok_or(anyhow!(
+                "decompress_moves() - Failed to find opening bits in hashmap"
+            ))?
+            .0;
 
         // play the opening moves so that we can decode the rest of the moves after the opening
         for san_str in opening_string.split(' ') {
@@ -136,7 +150,7 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
                     let m = san.to_move(&pos)?;
                     let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, &m);
                     moves.push(SanPlusWrapper(san_plus));
-                },
+                }
                 Err(_) => continue,
             }
         }
@@ -154,7 +168,7 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
         ))?;
         let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
         moves.push(SanPlusWrapper(san_plus));
-    } 
+    }
 
     Ok(moves)
 }
