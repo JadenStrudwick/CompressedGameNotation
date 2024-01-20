@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
-use cgn::compression::{bincode, dynamic_huffman, huffman};
+use cgn::compression::{bincode, dynamic_huffman, huffman, opening_huffman};
 use cgn::pgn_data::PgnData;
 use rayon::prelude::*;
 use std::{
@@ -279,6 +279,7 @@ pub fn collect_metrics_custom(
 
 /// A summary of the metrics for a compression strategy
 pub struct Summary {
+    pub total_games: usize,
     pub avg_time_to_compress: f64,
     pub avg_time_to_decompress: f64,
     pub avg_compressed_size: usize,
@@ -291,6 +292,7 @@ pub struct Summary {
 impl Display for Summary {
     /// Display the summary
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Total games: {}", self.total_games)?;
         writeln!(
             f,
             "Average time to compress: {} seconds",
@@ -325,6 +327,7 @@ impl Display for Summary {
 pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
     if metrics.is_empty() {
         return Summary {
+            total_games: 0,
             avg_time_to_compress: 0.0,
             avg_time_to_decompress: 0.0,
             avg_compressed_size: 0,
@@ -354,6 +357,7 @@ pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
     let compression_ratio = avg_compressed_size as f64 / avg_decompressed_size as f64;
 
     Summary {
+        total_games: metrics.len(),
         avg_time_to_compress,
         avg_time_to_decompress,
         avg_compressed_size,
@@ -369,6 +373,7 @@ pub fn bench(n: ToTake, db_path: &str) {
     bench_bincode(&n, db_path);
     bench_huffman(&n, db_path);
     bench_dynamic_huffman(&n, db_path);
+    bench_opening_huffman(&n, db_path);
 }
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
@@ -401,6 +406,18 @@ fn bench_dynamic_huffman(n: &ToTake, db_path: &str) {
     let metrics = collect_metrics(
         dynamic_huffman::compress_pgn_data,
         dynamic_huffman::decompress_pgn_data,
+        db_path,
+        n,
+    );
+    println!("{}", metrics_to_summary(metrics));
+}
+
+/// Collects and prints metrics for the opening huffman compression strategy.
+fn bench_opening_huffman(n: &ToTake, db_path: &str) {
+    println!("[BENCHMARK] Collecting metrics for opening huffman...");
+    let metrics = collect_metrics(
+        opening_huffman::compress_pgn_data,
+        opening_huffman::decompress_pgn_data,
         db_path,
         n,
     );
