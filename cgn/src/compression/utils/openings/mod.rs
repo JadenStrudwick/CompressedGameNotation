@@ -62,7 +62,6 @@ pub fn construct_trie_and_hashmap() -> (Trie<u8>, HashMap<String, BitVec>)  {
   openings.extend(d_tsv);
   openings.extend(e_tsv);
 
-  // TODO: Check for haspmap vs hasp_map 
   // construct the trie (for prefix matching the openings) and hashmap (for mapping the opening to a compressed version)
   let mut trie_builder = TrieBuilder::new();
   let mut hashmap = HashMap::new();

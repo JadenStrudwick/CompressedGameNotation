@@ -2,13 +2,7 @@
 3rd Year Project for University of Warwick Computer Science
 
 ## Todo
-- [ ] Mention simulated annealing approach in the report
-- [ ] Look into opening compression
-- [ ] Throw errors in the to_bit_vec functions if the number won't fit in the given number of bits
 - [ ] Try compressing the final huffman output 
-- [ ] Write some some of the report and research possible 4th technique for week 4
-- [ ] Check for unwraps
-- [ ] Check for TODOs 
 
 ## Journal
 
@@ -237,3 +231,8 @@ Given the clap interface, I have decided to slightly refactor the format in whic
   - output_path: "cgn/output9.txt"
 
 I've now deleted these output files, but these above recordings can be used to generate a new set of outputs for the final report.
+
+### 20th of Janurary 2024
+
+After meeting with my supervisor, he gave the good idea into looking into compressing the opening sequence of moves into a smaller representation. I implented this idea as 'opening huffman' and it actually beats dynamic huffman as well. This is very promising.
+

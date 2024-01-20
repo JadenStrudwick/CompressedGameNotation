@@ -60,17 +60,17 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
                 let gaussian = |mean: f64, x: f64| gaussian(height, dev, mean, x);
 
                 // get the hashmap for the current player 
-                let hash_map= if is_white {
+                let hashmap= if is_white {
                     &mut white_hashmap
                 } else {
                     &mut black_hashmap
                 };
 
                 // adjust encode the move and adjust the weights of the Huffman tree
-                let book = convert_hashmap_to_weights(hash_map).0;
+                let book = convert_hashmap_to_weights(hashmap).0;
                 book.encode(&mut bit_moves, &(index))?;
                 pos.play_unchecked(&san_move);
-                adjust_haspmap(hash_map, gaussian, index as f64);
+                adjust_haspmap(hashmap, gaussian, index as f64);
 
                 // flip the player
                 is_white = !is_white;
