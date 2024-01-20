@@ -7,6 +7,8 @@
 - [ ] Throw errors in the to_bit_vec functions if the number won't fit in the given number of bits
 - [ ] Try compressing the final huffman output 
 - [ ] Write some some of the report and research possible 4th technique for week 4
+- [ ] Check for unwraps
+- [ ] Check for TODOs 
 
 ## Journal
 
