@@ -12,105 +12,88 @@ use crate::pgn_data::{PgnData, SanPlusWrapper};
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
 use pgn_reader::SanPlus;
-use shakmaty::{Chess, Move, Position};
+use shakmaty::{Chess, Position};
 use std::collections::HashMap;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
+// Constants for the Gaussian function
 const GAUSSIAN_HEIGHT: f64 = 742325.3537353727;
 const GAUSSIAN_DEV: f64 = 2.5635425103971308;
 
+/// Gaussian function to adjust the weights of the Huffman tree
 fn gaussian(height: f64, dev: f64, mean: f64, x: f64) -> f64 {
     let b = -((x - mean).powi(2) / (2.0 * dev.powi(2)));
     height * b.exp()
 }
 
+/// Update the weights of the Huffman tree using a Gaussian function
 fn adjust_haspmap(
-    hashmap: &HashMap<u8, u64>,
+    hashmap: &mut HashMap<u8, u64>,
     gaussian: impl Fn(f64, f64) -> f64,
     mean: f64,
-) -> HashMap<u8, u64> {
-    hashmap
-        .iter()
-        .map(|(key, value)| {
-            let scale_factor = gaussian(mean, *key as f64);
-            (*key, (*value as f64 + scale_factor) as u64)
-        })
-        .collect()
-}
-
-struct GameEncoder {
-    white_hashmap: HashMap<u8, u64>,
-    black_hashmap: HashMap<u8, u64>,
-    is_white: bool,
-    height: f64,
-    dev: f64,
-    pub pos: Chess,
-    pub bit_moves: BitVec,
-}
-
-impl GameEncoder {
-    pub fn new(height: f64, dev: f64) -> GameEncoder {
-        GameEncoder {
-            white_hashmap: get_lichess_hashmap(),
-            black_hashmap: get_lichess_hashmap(),
-            is_white: true,
-            height,
-            dev,
-            pos: Chess::default(),
-            bit_moves: BitVec::new(),
-        }
+) {
+    for (key, value) in hashmap.iter_mut() {
+        let scale_factor = gaussian(mean, *key as f64);
+        *value = (*value as f64 + scale_factor) as u64;
     }
+}
 
-    pub fn encode(&mut self, m: &Move) -> Result<()> {
-        match get_move_index(&self.pos, m) {
+/// Compress the moves of a PGN file with a custom height and dev for the Gaussian function
+fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
+    let mut white_hashmap = get_lichess_hashmap();
+    let mut black_hashmap = get_lichess_hashmap();
+    let mut pos = Chess::default();
+    let mut bit_moves = BitVec::new();
+    let mut is_white = true;
+
+    // for each move, encode the move and play it on the position
+    for san_plus in pgn.moves.iter() {
+        let san_move = san_plus.0.san.to_move(&pos)?;
+
+        // get the index of the move and encode it into the bit vector
+        match get_move_index(&pos, &san_move) {
             Some(i) => {
                 let index: u8 = i.try_into()?;
 
                 // gaussian function to adjust the weights of the Huffman tree
-                let gaussian = |mean: f64, x: f64| gaussian(self.height, self.dev, mean, x);
+                let gaussian = |mean: f64, x: f64| gaussian(height, dev, mean, x);
 
-                // adjust the weights of the Huffman tree depending on the current player
-                if self.is_white {
-                    let (book, _) = convert_hashmap_to_weights(&self.white_hashmap);
-                    book.encode(&mut self.bit_moves, &(index))?;
-                    self.pos.play_unchecked(m);
-                    self.white_hashmap =
-                        adjust_haspmap(&self.white_hashmap, gaussian, index as f64);
+                // get the hashmap for the current player 
+                let hash_map= if is_white {
+                    &mut white_hashmap
                 } else {
-                    let (book, _) = convert_hashmap_to_weights(&self.black_hashmap);
-                    book.encode(&mut self.bit_moves, &(index))?;
-                    self.pos.play_unchecked(m);
-                    self.black_hashmap =
-                        adjust_haspmap(&self.black_hashmap, gaussian, index as f64);
-                }
-                self.is_white = !self.is_white;
-                Ok(())
+                    &mut black_hashmap
+                };
+
+                // adjust encode the move and adjust the weights of the Huffman tree
+                let book = convert_hashmap_to_weights(hash_map).0;
+                book.encode(&mut bit_moves, &(index))?;
+                pos.play_unchecked(&san_move);
+                adjust_haspmap(hash_map, gaussian, index as f64);
+
+                // flip the player
+                is_white = !is_white;
             }
-            None => Err(anyhow!(
-                "GameEncoder::encode() - Move {} is invalid for position {}",
-                m,
-                self.pos.board().to_string()
-            )),
+            None => {
+                return Err(anyhow!(
+                    "compress_moves() - Invalid move {} for position {}",
+                    san_move,
+                    pos.board().to_string()
+                ))
+            }
         }
     }
+
+    Ok(bit_moves)
 }
 
-fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
-    let mut encoder = GameEncoder::new(height, dev);
-    for san_plus in pgn.moves.iter() {
-        let m = san_plus.0.san.to_move(&encoder.pos)?;
-        encoder.encode(&m)?
-    }
-    Ok(encoder.bit_moves)
-}
-
-/// Compress a PGN file with custom height and dev
+/// Compress a PGN file with a custom height and dev for the Gaussian function
 pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
     let mut headers = compress_headers(pgn)?;
     let mut moves = compress_moves_custom(pgn, height, dev)?;
 
-    // if headers are empty, set bitvec to [1], otherwise set to signed i8 (1 byte)
+    // if headers are empty, set bitvec to [1], otherwise set to signed i8 (1 byte) representing the length of the headers in bytes
     let mut encoded_pgn;
     if headers.is_empty() {
         encoded_pgn = BitVec::from_elem(1, true);
@@ -129,118 +112,69 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     compress_pgn_data_custom(pgn, GAUSSIAN_HEIGHT, GAUSSIAN_DEV)
 }
 
-struct GameDecoder {
-    white_hashmap: HashMap<u8, u64>,
-    black_hashmap: HashMap<u8, u64>,
-    is_white: bool,
-    height: f64,
-    dev: f64,
-    pub pos: Chess,
-    pub moves: Vec<SanPlusWrapper>,
-}
-
-impl GameDecoder {
-    pub fn new(height: f64, dev: f64) -> GameDecoder {
-        GameDecoder {
-            white_hashmap: get_lichess_hashmap(),
-            black_hashmap: get_lichess_hashmap(),
-            is_white: true,
-            height,
-            dev,
-            pos: Chess::default(),
-            moves: Vec::new(),
-        }
-    }
-
-    fn decode_all(&mut self, move_bits: &BitVec) -> Result<()> {
-        let mut move_bits_copy = move_bits.clone();
-
-        let gaussian = |mean: f64, x: f64| gaussian(self.height, self.dev, mean, x);
-
-        // while we still have bits to decode
-        loop {
-            // start book and tree
-            let (book, tree) = if self.is_white {
-                convert_hashmap_to_weights(&self.white_hashmap)
-            } else {
-                convert_hashmap_to_weights(&self.black_hashmap)
-            };
-
-            // decode one move
-            let i = tree.decoder(&move_bits_copy, 256).next().ok_or(anyhow!(
-                "GameDecoder::decode_all() - Failed to decode next move from tree"
-            ))?;
-            let moves = generate_moves(&self.pos);
-            let index: usize = i.try_into()?;
-            let m = moves.get(index).ok_or(anyhow!(
-                "GameDecoder::decode_all() - Failed to decode index {} into a move",
-                index
-            ))?;
-            let san_plus = SanPlus::from_move_and_play_unchecked(&mut self.pos, m);
-            let san_plus_wrapper = SanPlusWrapper(san_plus);
-            self.moves.push(san_plus_wrapper);
-
-            if self.is_white {
-                self.white_hashmap = adjust_haspmap(&self.white_hashmap, gaussian, index as f64);
-            } else {
-                self.black_hashmap = adjust_haspmap(&self.black_hashmap, gaussian, index as f64);
-            }
-            self.is_white = !self.is_white;
-
-            // encode the move to learn the bitstring
-            let mut bitstring = BitVec::new();
-            book.encode(&mut bitstring, &i)?;
-
-            // if the bistring and remaining bits are equal, we are done
-            if bitstring == move_bits_copy {
-                break;
-            }
-
-            // if the game is over, we are done
-            if self.pos.is_checkmate() || self.pos.is_stalemate() {
-                break;
-            }
-
-            // otherwise, remove the bitstring from the remaining bits
-            move_bits_copy =
-                get_bitvec_slice(&move_bits_copy, bitstring.len(), move_bits_copy.len())?;
-        }
-        Ok(())
-    }
-}
-
-fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
-    let mut decoder = GameDecoder::new(GAUSSIAN_HEIGHT, GAUSSIAN_DEV);
-    decoder.decode_all(move_bits)?;
-    Ok(decoder.moves)
-}
-
 fn decompress_moves_custom(
-    move_bits: &BitVec,
+    mut move_bits: BitVec,
     height: f64,
     dev: f64,
 ) -> Result<Vec<SanPlusWrapper>> {
-    let mut decoder = GameDecoder::new(height, dev);
-    decoder.decode_all(move_bits)?;
-    Ok(decoder.moves)
-}
+    let mut white_hashmap = get_lichess_hashmap();
+    let mut black_hashmap = get_lichess_hashmap();
+    let mut pos = Chess::default();
+    let mut moves = Vec::new();
+    let mut is_white = true;
 
-/// Decompress a PGN file
-pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
-    let (headers, header_bytes_len) = decompress_headers(bit_vec)?;
-    if header_bytes_len == 0 {
-        let move_bits = get_bitvec_slice(bit_vec, 1, bit_vec.len())?;
-        Ok(PgnData {
-            headers,
-            moves: decompress_moves(&move_bits)?,
-        })
-    } else {
-        let move_bits = get_bitvec_slice(bit_vec, header_bytes_len, bit_vec.len())?;
-        Ok(PgnData {
-            headers,
-            moves: decompress_moves(&move_bits)?,
-        })
+    // gaussian function to adjust the weights of the Huffman tree
+    let gaussian = |mean: f64, x: f64| gaussian(height, dev, mean, x);
+
+    // while we still have bits to decode
+    loop {
+        // get the hashmap for the current player 
+        let current_hasp_map = if is_white {
+            &mut white_hashmap
+        } else {
+            &mut black_hashmap
+        };
+
+        // get the book and tree for the current player
+        let (book, tree) = convert_hashmap_to_weights(&current_hasp_map);
+
+        // decode one index
+        let i = tree.decoder(move_bits.clone(), 256).next().ok_or(anyhow!(
+            "decompress_moves_custom() - Failed to decode next move from tree"
+        ))?;
+
+        // get the legal moves for the current position and decode the index into a move
+        let legal_moves = generate_moves(&pos);
+        let index: usize = i.try_into()?;
+        let m = legal_moves.get(index).ok_or(anyhow!(
+            "decompress_moves_custom() - Failed to decode index {} into a move",
+            index
+        ))?;
+
+        // play the move on the position and add it to the moves vector
+        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
+        moves.push(SanPlusWrapper(san_plus));
+
+        // adjust the weights of the Huffman coding 
+        adjust_haspmap(current_hasp_map, gaussian, index as f64);
+
+        // flip the player
+        is_white = !is_white;
+
+        // encode the move to learn the bitstring
+        let mut bitstring = BitVec::new();
+        book.encode(&mut bitstring, &i)?;
+
+        // if the bistring and remaining bits are equal, OR the game is over, we are done decoding
+        if bitstring == move_bits || pos.is_checkmate() || pos.is_stalemate() {
+            break;
+        }
+
+        // otherwise, remove the bitstring from the remaining bits
+        move_bits = get_bitvec_slice(&move_bits, bitstring.len(), move_bits.len())?;
     }
+
+    Ok(moves)
 }
 
 /// Compress a PGN string with custom height and dev
@@ -250,15 +184,20 @@ pub fn decompress_pgn_data_custom(bit_vec: &BitVec, height: f64, dev: f64) -> Re
         let move_bits = get_bitvec_slice(bit_vec, 1, bit_vec.len())?;
         Ok(PgnData {
             headers,
-            moves: decompress_moves_custom(&move_bits, height, dev)?,
+            moves: decompress_moves_custom(move_bits, height, dev)?,
         })
     } else {
         let move_bits = get_bitvec_slice(bit_vec, header_bytes_len, bit_vec.len())?;
         Ok(PgnData {
             headers,
-            moves: decompress_moves_custom(&move_bits, height, dev)?,
+            moves: decompress_moves_custom(move_bits, height, dev)?,
         })
     }
+}
+
+/// Decompress a PGN file
+pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
+    decompress_pgn_data_custom(bit_vec, GAUSSIAN_HEIGHT, GAUSSIAN_DEV)
 }
 
 export_to_wasm!("dynamic_huffman", compress_pgn_data, decompress_pgn_data);
@@ -266,7 +205,6 @@ export_to_wasm!("dynamic_huffman", compress_pgn_data, decompress_pgn_data);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shakmaty::{Role, Square};
 
     /// Example PGN string.
     pub const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
@@ -345,20 +283,6 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let decompressed_pgn_str =
             decompress_pgn_data_custom(&compressed_data, 1000000.0, 1000000.0).unwrap();
         assert_eq!(pgn_data.to_string(), decompressed_pgn_str.to_string());
-    }
-
-    #[test]
-    /// Test that encoding an invalid move is not possible
-    fn test_encode_invalid_move() {
-        let mut encoder = GameEncoder::new(GAUSSIAN_HEIGHT, GAUSSIAN_DEV);
-        let invalid_move = Move::Normal {
-            role: Role::King,
-            from: Square::A1,
-            to: Square::A2,
-            capture: None,
-            promotion: None,
-        };
-        assert!(encoder.encode(&invalid_move).is_err());
     }
 
     #[test]
