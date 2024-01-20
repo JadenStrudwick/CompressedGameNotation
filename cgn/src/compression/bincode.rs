@@ -24,8 +24,8 @@ pub fn compress_pgn_data(pgn_data: &PgnData) -> Result<BitVec> {
 
 /// Decompresses the PGN data using bincode and ZlibDecoder.
 pub fn decompress_pgn_data(compressed_data: &BitVec) -> Result<PgnData> {
-    let compressed_data_bytes = compressed_data.to_bytes();
-    let mut decoder = flate2::read::ZlibDecoder::new(compressed_data_bytes.as_slice());
+    let compressed_bytes = compressed_data.to_bytes();
+    let mut decoder = flate2::read::ZlibDecoder::new(compressed_bytes.as_slice());
     Ok(bincode::deserialize_from(&mut decoder)?)
 }
 
