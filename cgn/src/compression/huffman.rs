@@ -11,55 +11,33 @@ use crate::pgn_data::{PgnData, SanPlusWrapper};
 
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
-use huffman_compress::{Book, Tree};
 use pgn_reader::SanPlus;
-use shakmaty::{Chess, Move, Position};
+use shakmaty::{Chess, Position};
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
-/// Game encoder that encodes moves into a bit vector using Huffman encoding
-struct GameEncoder {
-    book: Book<u8>,
-    pub pos: Chess,
-    pub bit_moves: BitVec,
-}
-
-impl GameEncoder {
-    /// Creates a new GameEncoder with the huffman book and a default position
-    pub fn new() -> GameEncoder {
-        GameEncoder {
-            book: convert_hashmap_to_weights(&get_lichess_hashmap()).0,
-            pos: Chess::default(),
-            bit_moves: BitVec::new(),
-        }
-    }
-
-    /// Encodes a move into the bit vector
-    pub fn encode(&mut self, m: &Move) -> Result<()> {
-        match get_move_index(&self.pos, m) {
-            Some(i) => {
-                let index: u8 = i.try_into()?;
-                self.book.encode(&mut self.bit_moves, &(index))?;
-                self.pos.play_unchecked(m);
-                Ok(())
-            }
-            None => Err(anyhow!(
-                "GameEncoder::encode() - Move {} is invalid for position {}",
-                m,
-                self.pos.board().to_string()
-            )),
-        }
-    }
-}
-
 /// Encode the moves of a PGN file using Huffman encoding
 fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
-    let mut encoder = GameEncoder::new();
+    let book = convert_hashmap_to_weights(&get_lichess_hashmap()).0;
+    let mut pos = Chess::default();
+    let mut bit_moves = BitVec::new();
+
+    // for each move, encode the move and play it on the position
     for san_plus in pgn.moves.iter() {
-        let m = san_plus.0.san.to_move(&encoder.pos)?;
-        encoder.encode(&m)?
+        let san_move = san_plus.0.san.to_move(&pos)?;
+
+        // get the index of the move and encode it into the bit vector
+        match get_move_index(&pos, &san_move) {
+            Some(i) => {
+                let index: u8 = i.try_into()?;
+                book.encode(&mut bit_moves, &(index))?;
+                pos.play_unchecked(&san_move);
+            }
+            None => return Err(anyhow!("compress_moves() - Invalid move {} for position {}", san_move, pos.board().to_string())),
+        }
     }
-    Ok(encoder.bit_moves)
+
+    Ok(bit_moves)
 }
 
 /// Compress a PGN file
@@ -81,45 +59,29 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     Ok(encoded_pgn)
 }
 
-/// Game decoder that decodes moves from a bit vector using Huffman encoding
-struct GameDecoder {
-    tree: Tree<u8>,
-    pos: Chess,
-    moves: Vec<SanPlusWrapper>,
-}
-
-impl GameDecoder {
-    /// Creates a new GameDecoder with the huffman tree and a default position
-    pub fn new() -> GameDecoder {
-        GameDecoder {
-            tree: convert_hashmap_to_weights(&get_lichess_hashmap()).1,
-            pos: Chess::default(),
-            moves: Vec::new(),
-        }
-    }
-
-    /// Decodes all moves from the bit vector
-    fn decode_all(&mut self, move_bits: &BitVec) -> Result<()> {
-        for i in self.tree.decoder(move_bits, 256) {
-            let moves = generate_moves(&self.pos);
-            let index: usize = i.try_into()?;
-            let m = moves.get(index).ok_or(anyhow!(
-                "GameDecoder::decode_all() - Failed to decode index {} into a move",
-                index
-            ))?;
-            let san_plus = SanPlus::from_move_and_play_unchecked(&mut self.pos, m);
-            let san_plus_wrapper = SanPlusWrapper(san_plus);
-            self.moves.push(san_plus_wrapper);
-        }
-        Ok(())
-    }
-}
-
 /// Decode the moves of a PGN file using Huffman encoding
 fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
-    let mut decoder = GameDecoder::new();
-    decoder.decode_all(move_bits)?;
-    Ok(decoder.moves)
+    let tree = convert_hashmap_to_weights(&get_lichess_hashmap()).1;
+    let mut pos = Chess::default();
+    let mut moves = Vec::new();
+
+    // decode the moves from the bit vector
+    for i in tree.decoder(move_bits, 256) {
+        let legal_moves = generate_moves(&pos);
+        let index: usize = i.try_into()?;
+
+        // get the move from the index
+        let m = legal_moves.get(index).ok_or(anyhow!(
+            "decompress_moves() - Failed to decode index {} into a move",
+            index
+        ))?;
+
+        // play the move on the position and add it to the moves vector
+        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
+        moves.push(SanPlusWrapper(san_plus));
+    }
+
+    Ok(moves)
 }
 
 /// Decompress a PGN file
@@ -145,7 +107,6 @@ export_to_wasm!("huffman", compress_pgn_data, decompress_pgn_data);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shakmaty::{Role, Square};
 
     /// Example PGN string.
     pub const PGN_STR_EXAMPLE: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
@@ -211,20 +172,6 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
         let pgn = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
         let compressed_pgn = compress_pgn_data(&pgn).unwrap();
         assert_eq!(compressed_pgn[0], false);
-    }
-
-    #[test]
-    /// Test that encoding an invalid move is not possible
-    fn test_encode_invalid_move() {
-        let mut encoder = GameEncoder::new();
-        let invalid_move = Move::Normal {
-            role: Role::King,
-            from: Square::A1,
-            to: Square::A2,
-            capture: None,
-            promotion: None,
-        };
-        assert!(encoder.encode(&invalid_move).is_err());
     }
 
     #[test]
