@@ -29,7 +29,7 @@ fn usize_to_u12_vec(i: usize) -> Result<BitVec> {
 fn extract_openings(tsv_contents: &str) -> Vec<String> {
   let mut openings = Vec::new();
   for line in tsv_contents.lines() {
-    let mut line = line.split("\t");
+    let mut line = line.split('\t');
 
     // skip the first two columns
     match line.nth(2) {
@@ -69,12 +69,9 @@ pub fn construct_trie_and_hashmap() -> (Trie<u8>, HashMap<String, BitVec>)  {
   // iterate through the openings and add them to the trie and hashmap
   openings.into_iter().enumerate().for_each(|(i, opening)| {
     // if the usize is too large to fit into 12 bits, skip it
-    match usize_to_u12_vec(i) {
-      Ok(bitvec) => {
-        trie_builder.push(&opening);
-        hashmap.insert(opening, bitvec);
-      }
-      Err(_) => return,
+    if let Ok(bitvec) = usize_to_u12_vec(i) {
+      trie_builder.push(&opening);
+      hashmap.insert(opening, bitvec);
     }
   });
 

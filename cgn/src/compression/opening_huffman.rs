@@ -59,7 +59,7 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
         bit_moves.append(&mut longest_match_bits);
 
         // play the opening moves so that we can encode the rest of the moves after the opening
-        for san_str in longest_match.split(" ") {
+        for san_str in longest_match.split(' ') {
             match San::from_str(san_str) {
                 Ok(san) => {
                     let m = san.to_move(&pos)?;
@@ -114,15 +114,14 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
 
 /// Decode the moves of a PGN file using Huffman encoding and a trie for the opening moves
 fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
-    let new_move_bits;
     let tree = convert_hashmap_to_weights(&get_lichess_hashmap()).1;
     let trie = construct_trie_and_hashmap();
     let mut pos = Chess::default();
     let mut moves = Vec::new();
 
     // if the first bit is 1, then we skip decoding the opening and just decode the moves like normal
-    if move_bits[0] {
-        new_move_bits = get_bitvec_slice(move_bits, 1, move_bits.len())?;
+    let new_move_bits = if move_bits[0] {
+        get_bitvec_slice(move_bits, 1, move_bits.len())?
     } else {
         // otherwise decode the opening
         let opening_bits = get_bitvec_slice(move_bits, 1, 13)?;
@@ -131,7 +130,7 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
         )?.0;
 
         // play the opening moves so that we can decode the rest of the moves after the opening
-        for san_str in opening_string.split(" ") {
+        for san_str in opening_string.split(' ') {
             match San::from_str(san_str) {
                 Ok(san) => {
                     let m = san.to_move(&pos)?;
@@ -142,8 +141,8 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
             }
         }
 
-        new_move_bits = get_bitvec_slice(move_bits, 13, move_bits.len())?;
-    }
+        get_bitvec_slice(move_bits, 13, move_bits.len())?
+    };
 
     // decode the rest of the moves after the opening
     for i in tree.decoder(new_move_bits, 256) {

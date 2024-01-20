@@ -136,7 +136,7 @@ fn decompress_moves_custom(
         };
 
         // get the book and tree for the current player
-        let (book, tree) = convert_hashmap_to_weights(&current_hasp_map);
+        let (book, tree) = convert_hashmap_to_weights(current_hasp_map);
 
         // decode one index
         let i = tree.decoder(move_bits.clone(), 256).next().ok_or(anyhow!(
