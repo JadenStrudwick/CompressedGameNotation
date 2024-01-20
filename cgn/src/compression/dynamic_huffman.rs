@@ -18,8 +18,8 @@ use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
 // Constants for the Gaussian function
-const GAUSSIAN_HEIGHT: f64 = 742325.3537353727;
-const GAUSSIAN_DEV: f64 = 2.5635425103971308;
+const GAUSSIAN_HEIGHT: f64 = 1895192.8184336487;
+const GAUSSIAN_DEV: f64 = 1.290257824649656;
 
 /// Gaussian function to adjust the weights of the Huffman tree
 fn gaussian(height: f64, dev: f64, mean: f64, x: f64) -> f64 {
