@@ -51,10 +51,14 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
 
         // play the opening moves so that we can encode the rest of the moves after the opening
         for san_str in longest_match.split(" ") {
-            let san = San::from_str(san_str).unwrap();
-            let m = san.to_move(&pos)?;
-            pos.play_unchecked(&m);
-            opening_move_count += 1;
+            match San::from_str(san_str) {
+                Ok(san) => {
+                    let m = san.to_move(&pos)?;
+                    pos.play_unchecked(&m);
+                    opening_move_count += 1;
+                },
+                Err(_) => continue,
+            }
         }
     }
 
@@ -117,10 +121,14 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
 
         // play the opening moves so that we can decode the rest of the moves after the opening
         for san_str in opening_string.split(" ") {
-            let san = San::from_str(san_str).unwrap();
-            let m = san.to_move(&pos)?;
-            let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, &m);
-            moves.push(SanPlusWrapper(san_plus));
+            match San::from_str(san_str) {
+                Ok(san) => {
+                    let m = san.to_move(&pos)?;
+                    let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, &m);
+                    moves.push(SanPlusWrapper(san_plus));
+                },
+                Err(_) => continue,
+            }
         }
 
         new_move_bits = get_bitvec_slice(move_bits, 13, move_bits.len())?;
