@@ -1,5 +1,6 @@
 pub mod huffman_codes;
 pub mod score_move;
+pub mod openings;
 use crate::pgn_data::{PgnData, PgnHeaders};
 use anyhow::{anyhow, Result};
 use bincode::serialize_into;
@@ -59,7 +60,7 @@ pub fn get_bitvec_slice(bit_vec: &BitVec, start: usize, end: usize) -> Result<Bi
     let len = bit_vec.len();
 
     // check for invalid indices
-    if (start > end) || (start >= len) || (end > len) {
+    if (start > end) || (start > len) || (end > len) {
         return Err(anyhow!(
             "get_bitvec_slice() - Invalid indices found, start: {}, end: {}, len: {}",
             start,
