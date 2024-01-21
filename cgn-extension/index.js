@@ -1,6 +1,6 @@
 import init, {
-  dynamic_huffman_decompress_pgn_str,
-  dynamic_huffman_compress_pgn_str,
+  opening_huffman_decompress_pgn_str,
+  opening_huffman_compress_pgn_str,
 } from './cgn.js';
 
 // Function to convert a Uint8Array to a hexadecimal string
@@ -84,7 +84,7 @@ async function run() {
   // handle compress copy button
   compressCopyButton.addEventListener('click', () => {
     try {
-      const compressed = dynamic_huffman_compress_pgn_str(compressInput.value);
+      const compressed = opening_huffman_compress_pgn_str(compressInput.value);
       if (compressed.length === 0) {
         compressCopyButton.innerText = 'Invalid PGN String!';
         return;
@@ -100,7 +100,7 @@ async function run() {
   // handle compress download button
   compressDownloadButton.addEventListener('click', () => {
     try {
-      const compressed = dynamic_huffman_compress_pgn_str(compressInput.value);
+      const compressed = opening_huffman_compress_pgn_str(compressInput.value);
       if (compressed.length === 0) {
         compressDownloadButton.innerText = 'Invalid PGN String!';
         return;
@@ -123,7 +123,7 @@ async function run() {
   // handle decompress copy button
   decompressCopyButton.addEventListener('click', () => {
     try {
-      const decompressed = dynamic_huffman_decompress_pgn_str(
+      const decompressed = opening_huffman_decompress_pgn_str(
         toUint8Array(decompressInput.value)
       );
       if (decompressed.length === 0) {
@@ -142,7 +142,7 @@ async function run() {
   decompressDownloadButton.addEventListener('click', () => {
     try {
 
-      const decompressed = dynamic_huffman_decompress_pgn_str(
+      const decompressed = opening_huffman_decompress_pgn_str(
         toUint8Array(decompressInput.value)
       );
       console.log(decompressed);

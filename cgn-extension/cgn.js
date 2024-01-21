@@ -82,12 +82,12 @@ function getArrayU8FromWasm0(ptr, len) {
 * @param {string} pgn_str
 * @returns {Uint8Array}
 */
-export function dynamic_huffman_compress_pgn_str(pgn_str) {
+export function opening_huffman_compress_pgn_str(pgn_str) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passStringToWasm0(pgn_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.dynamic_huffman_compress_pgn_str(retptr, ptr0, len0);
+        wasm.opening_huffman_compress_pgn_str(retptr, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var v2 = getArrayU8FromWasm0(r0, r1).slice();
@@ -118,14 +118,14 @@ function getStringFromWasm0(ptr, len) {
 * @param {Uint8Array} compressed_data
 * @returns {string}
 */
-export function dynamic_huffman_decompress_pgn_str(compressed_data) {
+export function opening_huffman_decompress_pgn_str(compressed_data) {
     let deferred2_0;
     let deferred2_1;
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passArray8ToWasm0(compressed_data, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.dynamic_huffman_decompress_pgn_str(retptr, ptr0, len0);
+        wasm.opening_huffman_decompress_pgn_str(retptr, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         deferred2_0 = r0;
@@ -171,6 +171,51 @@ export function bincode_decompress_pgn_str(compressed_data) {
         const ptr0 = passArray8ToWasm0(compressed_data, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.bincode_decompress_pgn_str(retptr, ptr0, len0);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        deferred2_0 = r0;
+        deferred2_1 = r1;
+        return getStringFromWasm0(r0, r1);
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+* Compresses a PGN string into a vector of bytes.
+* @param {string} pgn_str
+* @returns {Uint8Array}
+*/
+export function dynamic_huffman_compress_pgn_str(pgn_str) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passStringToWasm0(pgn_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.dynamic_huffman_compress_pgn_str(retptr, ptr0, len0);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var v2 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 1, 1);
+        return v2;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
+* Decompresses a vector of bytes into a PGN string.
+* @param {Uint8Array} compressed_data
+* @returns {string}
+*/
+export function dynamic_huffman_decompress_pgn_str(compressed_data) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(compressed_data, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.dynamic_huffman_decompress_pgn_str(retptr, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         deferred2_0 = r0;

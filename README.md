@@ -1,9 +1,6 @@
 # Compressed Game Notation
 3rd Year Project for University of Warwick Computer Science
 
-## Todo
-- [ ] Update extension
-
 ## Journal
 
 ### 31st of October 2023
@@ -236,3 +233,6 @@ I've now deleted these output files, but these above recordings can be used to g
 
 After meeting with my supervisor, he gave the good idea into looking into compressing the opening sequence of moves into a smaller representation. I implented this idea as 'opening huffman' and it actually beats dynamic huffman as well. This is very promising.
 
+### 21st of Janurary 2024
+
+I tried out compressing the results after they are converted to bitvecs using flate2. This doesn't actually work well at all, as flate2 requires you to give it bytes, so converting a bitvec to bytes may add a bunch of padding 0's. This is not ideal and when I roughly tested it on 'opening huffman' it actually made the bits per move around 8, roughly twice as bad. As such, I won't be implementing this idea.
