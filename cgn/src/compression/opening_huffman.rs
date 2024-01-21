@@ -215,6 +215,21 @@ Qd2 Bb4 29. c3 Be7 30. Nf2 dxc3 31. bxc3 Nd8 32. Bb1 Ne6 33. Nh3 Bc5 34. Ba2 Rd8
 Bxf7+ Kf8 42. Qxf2 Rxd1 43. Bxg6 Qd6 44. g5 Qd3 45. Qc5+ Qd6 46. Qc8+ Kg7 47.
 Qxb7+ Kf8 48. Qf7# 1-0"#;
 
+    /// Example PGN string with a common opening.
+    pub const PGN_STR_EXAMPLE_OPENING: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
+[Site ""]
+[Date "2023.01.03"]
+[Round "?"]
+[White "Magnus Carlsen"]
+[Black "Samvel Ter-Sahakyan"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3
+d5 9. exd5 Nxd5 10. Nxe5 Nxe5 11. Rxe5 c6 12. d4 Bd6 13. Re1 Qh4 14. g3 Qh3 15.
+Re4 g5 16. Qf1 Qh5 17. Nd2 Bf5 18. f3 Nf6 19. Qg2 Bh3 20. Qf2 Rae8 21. Rxe8 Rxe8
+22. Nf1 g4 23. Bd2 gxf3 24. Re1 Re2 25. Rxe2 fxe2 26. Ne3 Ne4 27. Qe1 Qf3 28.
+Bc2 Nxd2 29. Qxd2 Qf1+ 30. Nxf1 exf1=Q# 1-0"#;
+
     #[test]
     /// Test if the compression is correct for PGN structs.
     fn test_compress_pgn_data() {
@@ -240,6 +255,25 @@ Qxb7+ Kf8 48. Qf7# 1-0"#;
     /// Tests if the compression is correct for a PGN string with no headers.
     fn test_compress_pgn_str_no_headers() {
         let mut pgn_data = PgnData::from_str(PGN_STR_EXAMPLE).unwrap();
+        pgn_data.clear_headers();
+        let compressed_data = compress_pgn_data(&pgn_data).unwrap();
+        let decompressed_pgn_str = decompress_pgn_data(&compressed_data).unwrap();
+        assert_eq!(pgn_data.to_string(), decompressed_pgn_str.to_string());
+    }
+
+    #[test]
+    /// Tests if the compression is correct for a PGN string with a common opening.
+    fn test_compress_pgn_str_opening() {
+        let pgn_str = PGN_STR_EXAMPLE_OPENING;
+        let compressed_data = huffman_compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = huffman_decompress_pgn_str(&compressed_data);
+        assert_eq!(pgn_str, decompressed_pgn_str);
+    }
+
+    #[test]
+    /// Tests if the compression is correct for a PGN string with a common opening and no headers.
+    fn test_compress_pgn_str_opening_no_headers() {
+        let mut pgn_data = PgnData::from_str(PGN_STR_EXAMPLE_OPENING).unwrap();
         pgn_data.clear_headers();
         let compressed_data = compress_pgn_data(&pgn_data).unwrap();
         let decompressed_pgn_str = decompress_pgn_data(&compressed_data).unwrap();

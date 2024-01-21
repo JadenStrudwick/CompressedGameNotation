@@ -2,7 +2,7 @@
 3rd Year Project for University of Warwick Computer Science
 
 ## Todo
-- [ ] Try compressing the final huffman output 
+- [ ] Update extension
 
 ## Journal
 
