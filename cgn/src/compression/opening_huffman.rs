@@ -191,7 +191,7 @@ pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
     }
 }
 
-export_to_wasm!("huffman", compress_pgn_data, decompress_pgn_data);
+export_to_wasm!("opening_huffman", compress_pgn_data, decompress_pgn_data);
 
 #[cfg(test)]
 mod tests {
@@ -216,19 +216,23 @@ Bxf7+ Kf8 42. Qxf2 Rxd1 43. Bxg6 Qd6 44. g5 Qd3 45. Qc5+ Qd6 46. Qc8+ Kg7 47.
 Qxb7+ Kf8 48. Qf7# 1-0"#;
 
     /// Example PGN string with a common opening.
-    pub const PGN_STR_EXAMPLE_OPENING: &str = r#"[Event "Titled Tuesday Blitz January 03 Early 2023"]
+    pub const PGN_STR_EXAMPLE_OPENING: &str = r#"[Event "Group A"]
 [Site ""]
-[Date "2023.01.03"]
+[Date "2024.01.21"]
 [Round "?"]
-[White "Magnus Carlsen"]
-[Black "Samvel Ter-Sahakyan"]
-[Result "1-0"]
+[White "Adiga Sathvik"]
+[Black "Van Huy Nguyen"]
+[Result "1/2-1/2"]
 
-1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3
-d5 9. exd5 Nxd5 10. Nxe5 Nxe5 11. Rxe5 c6 12. d4 Bd6 13. Re1 Qh4 14. g3 Qh3 15.
-Re4 g5 16. Qf1 Qh5 17. Nd2 Bf5 18. f3 Nf6 19. Qg2 Bh3 20. Qf2 Rae8 21. Rxe8 Rxe8
-22. Nf1 g4 23. Bd2 gxf3 24. Re1 Re2 25. Rxe2 fxe2 26. Ne3 Ne4 27. Qe1 Qf3 28.
-Bc2 Nxd2 29. Qxd2 Qf1+ 30. Nxf1 exf1=Q# 1-0"#;
+1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Bf5 5. Ng3 Bg6 6. h4 h6 7. Nf3 e6 8. Ne5
+Bh7 9. Bd3 Bxd3 10. Qxd3 Nd7 11. Qe2 Ngf6 12. c3 Be7 13. Bd2 O-O 14. O-O-O c5
+15. dxc5 Nxe5 16. Qxe5 Qa5 17. Kb1 Qxc5 18. Qe2 Rfd8 19. Be3 Qc6 20. f3 Bc5 21.
+Rhe1 Bxe3 22. Qxe3 Qa4 23. Rd4 Rxd4 24. Qxd4 Qxd4 25. cxd4 Rd8 26. Ne2 Kf8 27.
+Kc2 Nd5 28. Kd2 Rd6 29. Rc1 Rb6 30. b3 Ra6 31. Rc2 Ke7 32. a4 Rb6 33. Nc1 Rd6
+34. Nd3 Rd8 35. g3 h5 36. Nc5 b6 37. Nd3 f6 38. Rc4 Kd7 39. a5 Ra8 40. Rc1 Rc8
+41. Rc4 Rc6 42. axb6 axb6 43. Ke2 Rc7 44. Kd2 Ra7 45. Ra4 Rxa4 46. bxa4 Kd6 47.
+Nf2 Ne7 48. Ne4+ Kd5 49. Kd3 Nf5 50. Nc3+ Kc6 51. Ne2 g5 52. hxg5 fxg5 53. g4
+hxg4 54. fxg4 Nh6 55. Nc3 Nxg4 56. Ne4 Kd5 57. Nc3+ Kc6 58. Ne4 1/2-1/2"#;
 
     #[test]
     /// Test if the compression is correct for PGN structs.
@@ -246,8 +250,8 @@ Bc2 Nxd2 29. Qxd2 Qf1+ 30. Nxf1 exf1=Q# 1-0"#;
     #[test]
     fn test_compress_pgn_str() {
         let pgn_str = PGN_STR_EXAMPLE;
-        let compressed_data = huffman_compress_pgn_str(pgn_str);
-        let decompressed_pgn_str = huffman_decompress_pgn_str(&compressed_data);
+        let compressed_data = opening_huffman_compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = opening_huffman_decompress_pgn_str(&compressed_data);
         assert_eq!(pgn_str, decompressed_pgn_str);
     }
 
@@ -265,8 +269,8 @@ Bc2 Nxd2 29. Qxd2 Qf1+ 30. Nxf1 exf1=Q# 1-0"#;
     /// Tests if the compression is correct for a PGN string with a common opening.
     fn test_compress_pgn_str_opening() {
         let pgn_str = PGN_STR_EXAMPLE_OPENING;
-        let compressed_data = huffman_compress_pgn_str(pgn_str);
-        let decompressed_pgn_str = huffman_decompress_pgn_str(&compressed_data);
+        let compressed_data = opening_huffman_compress_pgn_str(pgn_str);
+        let decompressed_pgn_str = opening_huffman_decompress_pgn_str(&compressed_data);
         assert_eq!(pgn_str, decompressed_pgn_str);
     }
 
@@ -301,7 +305,7 @@ Bc2 Nxd2 29. Qxd2 Qf1+ 30. Nxf1 exf1=Q# 1-0"#;
     /// Test that an invalid string cannot be compressed
     fn invalid_pgn_str_compress() {
         let pgn_str = "foo bar";
-        let compressed_data = huffman_compress_pgn_str(pgn_str);
+        let compressed_data = opening_huffman_compress_pgn_str(pgn_str);
         assert_eq!(compressed_data.len(), 0);
     }
 
@@ -309,7 +313,7 @@ Bc2 Nxd2 29. Qxd2 Qf1+ 30. Nxf1 exf1=Q# 1-0"#;
     /// Test that an invalid string cannot be decompressed
     fn invalid_pgn_str_decompress() {
         let compressed_data = vec![0, 1, 2, 3];
-        let decompressed_pgn_str = huffman_decompress_pgn_str(&compressed_data);
+        let decompressed_pgn_str = opening_huffman_decompress_pgn_str(&compressed_data);
         assert_eq!(decompressed_pgn_str.len(), 0);
     }
 }
