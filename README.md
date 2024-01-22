@@ -1,8 +1,6 @@
 # Compressed Game Notation
 3rd Year Project for University of Warwick Computer Science
 
-## Journal
-
 ### 31st of October 2023
 
 I am currently working on implementing an iterator for the PGN parser.
