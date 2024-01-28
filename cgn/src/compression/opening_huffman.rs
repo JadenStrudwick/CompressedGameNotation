@@ -22,7 +22,7 @@ use wasm_bindgen::prelude::*;
 fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
     let book = convert_hashmap_to_weights(&get_lichess_hashmap()).0;
     let mut pos = Chess::default();
-    let mut bit_moves = BitVec::new();
+    let mut move_bits = BitVec::new();
     let mut opening_move_count = 0;
 
     // get the pgn_moves and opening trie
@@ -43,7 +43,7 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
 
     // if there are no matches, then return true (1 bit) and then the rest of the compressed moves
     if matches.is_empty() {
-        bit_moves.push(true);
+        move_bits.push(true);
     } else {
         // get the longest match
         let longest_match = matches_strings
@@ -62,15 +62,15 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
             .clone();
 
         // add false (1 bit) to the bit vector and then the compressed opening (12 bits)
-        bit_moves.push(false);
-        bit_moves.append(&mut longest_match_bits);
+        move_bits.push(false);
+        move_bits.append(&mut longest_match_bits);
 
         // play the opening moves so that we can encode the rest of the moves after the opening
         for san_str in longest_match.split(' ') {
             match San::from_str(san_str) {
                 Ok(san) => {
-                    let m = san.to_move(&pos)?;
-                    pos.play_unchecked(&m);
+                    let san_move = san.to_move(&pos)?;
+                    pos.play_unchecked(&san_move);
                     opening_move_count += 1;
                 }
                 Err(_) => continue,
@@ -80,26 +80,26 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
 
     // encode the rest of the moves after the opening
     for san_plus in pgn.moves.iter().skip(opening_move_count) {
-        let m = san_plus.0.san.to_move(&pos)?;
+        let san_move = san_plus.0.san.to_move(&pos)?;
 
         // match the move to the index
-        match get_move_index(&pos, &m) {
+        match get_move_index(&pos, &san_move) {
             Some(i) => {
                 let index: u8 = i.try_into()?;
-                book.encode(&mut bit_moves, &(index))?;
-                pos.play_unchecked(&m);
+                book.encode(&mut move_bits, &(index))?;
+                pos.play_unchecked(&san_move);
             }
             None => {
                 return Err(anyhow!(
                     "GameEncoder::encode() - Move {} is invalid for position {}",
-                    m,
+                    san_move,
                     pos.board().to_string()
                 ))
             }
         }
     }
 
-    Ok(bit_moves)
+    Ok(move_bits)
 }
 
 /// Compress a PGN file
@@ -147,8 +147,8 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
         for san_str in opening_string.split(' ') {
             match San::from_str(san_str) {
                 Ok(san) => {
-                    let m = san.to_move(&pos)?;
-                    let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, &m);
+                    let san_move = san.to_move(&pos)?;
+                    let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, &san_move);
                     moves.push(SanPlusWrapper(san_plus));
                 }
                 Err(_) => continue,
@@ -162,11 +162,11 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
     for i in tree.decoder(new_move_bits, 256) {
         let legal_moves = generate_moves(&pos);
         let index: usize = i.try_into()?;
-        let m = legal_moves.get(index).ok_or(anyhow!(
+        let san_move = legal_moves.get(index).ok_or(anyhow!(
             "GameDecoder::decode_all() - Failed to decode index {} into a move",
             index
         ))?;
-        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
+        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, san_move);
         moves.push(SanPlusWrapper(san_plus));
     }
 
