@@ -10,5 +10,6 @@ pub mod bincode;
 pub mod dynamic_huffman;
 pub mod huffman;
 pub mod opening_huffman;
-pub mod asn;
+pub mod ans;
+pub mod test;
 mod utils;

@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
-use cgn::compression::{bincode, dynamic_huffman, huffman, opening_huffman};
+use cgn::compression::{bincode, dynamic_huffman, huffman, opening_huffman, ans};
 use cgn::pgn_data::PgnData;
 use rayon::prelude::*;
 use std::{
@@ -227,21 +227,19 @@ pub fn collect_metrics(
     decompress_fn: fn(&BitVec) -> Result<PgnData>,
     db_path: &str,
     n: &ToTake,
-) -> Vec<Metrics> {
+) -> Vec<Result<Metrics>> {
     if let ToTake::N(n) = n {
         pgn_db_into_iter(db_path)
             .expect("Failed to open PGN database file")
             .par_bridge()
             .take_any(*n)
             .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
-            .filter_map(|x| x.ok())
             .collect::<Vec<_>>()
     } else {
         pgn_db_into_iter(db_path)
             .expect("Failed to open PGN database file")
             .par_bridge()
             .map(|pgn_str| collect_single_metric(&pgn_str, compress_fn, decompress_fn))
-            .filter_map(|x| x.ok())
             .collect::<Vec<_>>()
     }
 }
@@ -254,7 +252,7 @@ pub fn collect_metrics_custom(
     n: &ToTake,
     height: f64,
     dev: f64,
-) -> Vec<Metrics> {
+) -> Vec<Result<Metrics>> {
     if let ToTake::N(n) = n {
         pgn_db_into_iter(db_path)
             .expect("Failed to open PGN database file")
@@ -263,7 +261,6 @@ pub fn collect_metrics_custom(
             .map(|pgn_str| {
                 collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev)
             })
-            .filter_map(|x| x.ok())
             .collect::<Vec<_>>()
     } else {
         pgn_db_into_iter(db_path)
@@ -272,7 +269,6 @@ pub fn collect_metrics_custom(
             .map(|pgn_str| {
                 collect_single_metric_custom(&pgn_str, compress_fn, decompress_fn, height, dev)
             })
-            .filter_map(|x| x.ok())
             .collect::<Vec<_>>()
     }
 }
@@ -324,7 +320,7 @@ impl Display for Summary {
 }
 
 /// Summarize the metrics for a compression strategy.
-pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
+pub fn metrics_to_summary(metrics: Vec<Result<Metrics>>) -> Summary {
     if metrics.is_empty() {
         return Summary {
             total_games: 0,
@@ -337,6 +333,18 @@ pub fn metrics_to_summary(metrics: Vec<Metrics>) -> Summary {
             compression_ratio: 0.0,
         };
     }
+
+    // filter out and print errors
+    let metrics = metrics
+        .into_iter()
+        .filter_map(|x| match x {
+            Ok(x) => Some(x),
+            Err(e) => {
+                println!("{}", e);
+                None
+            }
+        })
+        .collect::<Vec<_>>();
 
     // compute averages
     let avg_time_to_compress =
@@ -374,6 +382,7 @@ pub fn bench(n: ToTake, db_path: &str) {
     bench_huffman(&n, db_path);
     bench_dynamic_huffman(&n, db_path);
     bench_opening_huffman(&n, db_path);
+    bench_ans(&n, db_path);
 }
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
@@ -418,6 +427,18 @@ fn bench_opening_huffman(n: &ToTake, db_path: &str) {
     let metrics = collect_metrics(
         opening_huffman::compress_pgn_data,
         opening_huffman::decompress_pgn_data,
+        db_path,
+        n,
+    );
+    println!("{}", metrics_to_summary(metrics));
+}
+
+/// Collects and prints metrics for the ans compression strategy.
+fn bench_ans(n: &ToTake, db_path: &str) {
+    println!("[BENCHMARK] Collecting metrics for ans...");
+    let metrics = collect_metrics(
+        ans::compress_pgn_data,
+        ans::decompress_pgn_data,
         db_path,
         n,
     );

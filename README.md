@@ -234,3 +234,17 @@ After meeting with my supervisor, he gave the good idea into looking into compre
 ### 21st of Janurary 2024
 
 I tried out compressing the results after they are converted to bitvecs using flate2. This doesn't actually work well at all, as flate2 requires you to give it bytes, so converting a bitvec to bytes may add a bunch of padding 0's. This is not ideal and when I roughly tested it on 'opening huffman' it actually made the bits per move around 8, roughly twice as bad. As such, I won't be implementing this idea.
+
+### 28th of Janurary 2024
+
+Been doing some reading into AC and ANS codings, after reading a old blog post about chess compression. I started using the constriction library and I got everything working, but I just found out that the encoded data is always padded to a 'word' size. This is not ideal, as it'll increase our compression ratios significantly. I was using a ANS coder, but now I need to find some other library that allows me to access the data without any data padding. This is quite unfortunate.
+
+I just finished checking out Arcode, and it too uses the Write trait, which works on the byte level. 
+
+Constriction was my best bet, as it provides ways to customise the Coders/Decoders significantly. However, when I looked into changing the coders word size to a boolean (so that it's output is a bitvec), I found that the Word requires the implementation of the BitArray traight. This seems to be very complex to implement, with the library author making exessive usage of UNSAFE and MACROS to implement them. I don't think I will be able to implement this trait for bools, so constriction is out the picture too.
+
+I think this leaves me with two options:
+1) Implement my own ANS/Range/Ac coder
+2) Do not attempt this technique
+
+It seems very difficult to implement a ANS coder, for possibly no gain. I think I will not attempt this technique.
