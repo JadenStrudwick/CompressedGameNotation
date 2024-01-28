@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use bit_vec::BitVec;
-use cgn::compression::{bincode, dynamic_huffman, huffman, opening_huffman, ans};
+use cgn::compression::{bincode, dynamic_huffman, huffman, opening_huffman};
 use cgn::pgn_data::PgnData;
 use rayon::prelude::*;
 use std::{
@@ -382,7 +382,6 @@ pub fn bench(n: ToTake, db_path: &str) {
     bench_huffman(&n, db_path);
     bench_dynamic_huffman(&n, db_path);
     bench_opening_huffman(&n, db_path);
-    bench_ans(&n, db_path);
 }
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
@@ -427,18 +426,6 @@ fn bench_opening_huffman(n: &ToTake, db_path: &str) {
     let metrics = collect_metrics(
         opening_huffman::compress_pgn_data,
         opening_huffman::decompress_pgn_data,
-        db_path,
-        n,
-    );
-    println!("{}", metrics_to_summary(metrics));
-}
-
-/// Collects and prints metrics for the ans compression strategy.
-fn bench_ans(n: &ToTake, db_path: &str) {
-    println!("[BENCHMARK] Collecting metrics for ans...");
-    let metrics = collect_metrics(
-        ans::compress_pgn_data,
-        ans::decompress_pgn_data,
         db_path,
         n,
     );
