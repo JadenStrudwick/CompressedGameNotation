@@ -20,7 +20,7 @@ use wasm_bindgen::prelude::*;
 fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
     let book = convert_hashmap_to_weights(&get_lichess_hashmap()).0;
     let mut pos = Chess::default();
-    let mut bit_moves = BitVec::new();
+    let mut move_bits = BitVec::new();
 
     // for each move, encode the move and play it on the position
     for san_plus in pgn.moves.iter() {
@@ -30,7 +30,7 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
         match get_move_index(&pos, &san_move) {
             Some(i) => {
                 let index: u8 = i.try_into()?;
-                book.encode(&mut bit_moves, &(index))?;
+                book.encode(&mut move_bits, &(index))?;
                 pos.play_unchecked(&san_move);
             }
             None => {
@@ -43,7 +43,7 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
         }
     }
 
-    Ok(bit_moves)
+    Ok(move_bits)
 }
 
 /// Compress a PGN file
@@ -77,13 +77,14 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
         let index: usize = i.try_into()?;
 
         // get the move from the index
-        let m = legal_moves.get(index).ok_or(anyhow!(
+        // TODO replace with san_move
+        let san_move = legal_moves.get(index).ok_or(anyhow!(
             "decompress_moves() - Failed to decode index {} into a move",
             index
         ))?;
 
         // play the move on the position and add it to the moves vector
-        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
+        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, san_move);
         moves.push(SanPlusWrapper(san_plus));
     }
 
