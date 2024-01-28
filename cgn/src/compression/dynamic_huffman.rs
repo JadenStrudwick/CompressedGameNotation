@@ -40,7 +40,7 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
     let mut white_hashmap = get_lichess_hashmap();
     let mut black_hashmap = get_lichess_hashmap();
     let mut pos = Chess::default();
-    let mut bit_moves = BitVec::new();
+    let mut move_bits = BitVec::new();
     let mut is_white = true;
 
     // for each move, encode the move and play it on the position
@@ -64,7 +64,7 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
 
                 // adjust encode the move and adjust the weights of the Huffman tree
                 let book = convert_hashmap_to_weights(hashmap).0;
-                book.encode(&mut bit_moves, &(index))?;
+                book.encode(&mut move_bits, &(index))?;
                 pos.play_unchecked(&san_move);
                 adjust_haspmap(hashmap, gaussian, index as f64);
 
@@ -81,7 +81,7 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
         }
     }
 
-    Ok(bit_moves)
+    Ok(move_bits)
 }
 
 /// Compress a PGN file with a custom height and dev for the Gaussian function
@@ -142,13 +142,13 @@ fn decompress_moves_custom(
         // get the legal moves for the current position and decode the index into a move
         let legal_moves = generate_moves(&pos);
         let index: usize = i.try_into()?;
-        let m = legal_moves.get(index).ok_or(anyhow!(
+        let san_move = legal_moves.get(index).ok_or(anyhow!(
             "decompress_moves_custom() - Failed to decode index {} into a move",
             index
         ))?;
 
         // play the move on the position and add it to the moves vector
-        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, m);
+        let san_plus = SanPlus::from_move_and_play_unchecked(&mut pos, san_move);
         moves.push(SanPlusWrapper(san_plus));
 
         // adjust the weights of the Huffman coding
@@ -162,7 +162,7 @@ fn decompress_moves_custom(
         book.encode(&mut bitstring, &i)?;
 
         // if the bistring and remaining bits are equal, OR the game is over, we are done decoding
-        if bitstring == move_bits || pos.is_checkmate() || pos.is_stalemate() {
+        if bitstring == move_bits || pos.is_game_over() {
             break;
         }
 
