@@ -77,7 +77,6 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
         let index: usize = i.try_into()?;
 
         // get the move from the index
-        // TODO replace with san_move
         let san_move = legal_moves.get(index).ok_or(anyhow!(
             "decompress_moves() - Failed to decode index {} into a move",
             index
