@@ -260,3 +260,7 @@ I think I will use the dataset of openings and import that back into the library
 
 I just finished the refactor to use the txt file. I now need a way to using the CLI to change the parameters of the opening huffman benchmarks. After that I also need to go back and refactor the opening huffman stuff to make sure its all clear. Maybe remove the tsv files and intermediate python stuff I did (after at least commiting it once?)
 
+- [ ] Get CLI working and collect some data on it (find optimal 2 parameters)
+- [ ] Refactor opening huffman to make it clear
+- [ ] Remove tsv files and python stuff
+- [ ] Return benchmark.rs to its previous state (i.e. ensure all strategies get benchmarked)
