@@ -248,3 +248,15 @@ I think this leaves me with two options:
 2) Do not attempt this technique
 
 It seems very difficult to implement a ANS coder, for possibly no gain. I think I will not attempt this technique.
+
+### 3rd of Feburary 2024
+
+Need to optimise the opening huffman encoding further.
+
+1) See what Openings are most common (seems like only 512 openings can cover ~90% of games, which means 9 bits per opening)
+2) Add code that allows for the number of openings to be changed (1-12)
+
+I think I will use the dataset of openings and import that back into the library. So the tsvs yields the common openings, and then I use those instead of all the tsvs.
+
+I just finished the refactor to use the txt file. I now need a way to using the CLI to change the parameters of the opening huffman benchmarks. After that I also need to go back and refactor the opening huffman stuff to make sure its all clear. Maybe remove the tsv files and intermediate python stuff I did (after at least commiting it once?)
+

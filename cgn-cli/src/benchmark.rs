@@ -378,9 +378,9 @@ pub fn metrics_to_summary(metrics: Vec<Result<Metrics>>) -> Summary {
 
 /// Collects metrics for the specified compression and decompression functions.
 pub fn bench(n: ToTake, db_path: &str) {
-    bench_bincode(&n, db_path);
-    bench_huffman(&n, db_path);
-    bench_dynamic_huffman(&n, db_path);
+    // bench_bincode(&n, db_path);
+    // bench_huffman(&n, db_path);
+    // bench_dynamic_huffman(&n, db_path);
     bench_opening_huffman(&n, db_path);
 }
 

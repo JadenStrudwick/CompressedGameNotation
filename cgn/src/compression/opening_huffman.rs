@@ -3,7 +3,7 @@
 //! moves are encoded using Huffman encoding.
 
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
-use super::utils::openings::construct_trie_and_hashmap;
+use super::utils::openings::{construct_trie_and_hashmap};
 use super::utils::score_move::{generate_moves, get_move_index};
 use super::utils::{compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec};
 
@@ -18,8 +18,11 @@ use std::str;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
+const MIN_OPENING_MOVES: usize = 4;
+const BITVEC_LEN: usize = 12;
+
 /// Encode the moves of a PGN file using Huffman encoding and a trie for the opening moves
-fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
+fn compress_moves_custom(pgn: &PgnData, min_opening_moves: usize, bitvec_len: usize) -> Result<BitVec> {
     let book = convert_hashmap_to_weights(&get_lichess_hashmap()).0;
     let mut pos = Chess::default();
     let mut move_bits = BitVec::new();
@@ -31,7 +34,7 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
         "compress_moves() - Failed to get moves from PGN string {}",
         pgn_str
     ))?;
-    let trie = construct_trie_and_hashmap();
+    let trie = construct_trie_and_hashmap(min_opening_moves, bitvec_len);
 
     // check for a prefix match with the opening trie
     let matches = trie.0.common_prefix_search(pgn_moves);
@@ -102,10 +105,10 @@ fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
     Ok(move_bits)
 }
 
-/// Compress a PGN file
-pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
+/// Compress a PGN file with a custom minimum number of opening moves and bitvec length for the opening trie
+pub fn compress_pgn_data_custom(pgn: &PgnData, min_opening_moves: usize, bitvec_len: usize) -> Result<BitVec> {
     let mut headers = compress_headers(pgn)?;
-    let mut moves = compress_moves(pgn)?;
+    let mut moves = compress_moves_custom(pgn, min_opening_moves, bitvec_len)?;
 
     // if headers are empty, set bitvec to [1], otherwise set to signed i8 (1 byte)
     let mut encoded_pgn;
@@ -121,10 +124,15 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     Ok(encoded_pgn)
 }
 
+/// Compress a PGN file
+pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
+    compress_pgn_data_custom(pgn, MIN_OPENING_MOVES, BITVEC_LEN)
+}
+
 /// Decode the moves of a PGN file using Huffman encoding and a trie for the opening moves
-fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
+fn decompress_moves_custom(move_bits: &BitVec, min_opening_moves: usize, bitvec_len: usize) -> Result<Vec<SanPlusWrapper>> {
     let tree = convert_hashmap_to_weights(&get_lichess_hashmap()).1;
-    let trie = construct_trie_and_hashmap();
+    let trie = construct_trie_and_hashmap(min_opening_moves, bitvec_len);
     let mut pos = Chess::default();
     let mut moves = Vec::new();
 
@@ -133,7 +141,7 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
         get_bitvec_slice(move_bits, 1, move_bits.len())?
     } else {
         // otherwise decode the opening
-        let opening_bits = get_bitvec_slice(move_bits, 1, 13)?;
+        let opening_bits = get_bitvec_slice(move_bits, 1, bitvec_len+1)?;
         let opening_string = trie
             .1
             .iter()
@@ -155,7 +163,7 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
             }
         }
 
-        get_bitvec_slice(move_bits, 13, move_bits.len())?
+        get_bitvec_slice(move_bits, bitvec_len+1, move_bits.len())?
     };
 
     // decode the rest of the moves after the opening
@@ -173,22 +181,27 @@ fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
     Ok(moves)
 }
 
-/// Decompress a PGN file
-pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
+/// Decompress a PGN file with a custom minimum number of opening moves and bitvec length for the opening trie
+pub fn decompress_pgn_data_custom(bit_vec: &BitVec, min_opening_moves: usize, bitvec_len: usize) -> Result<PgnData> {
     let (headers, header_bytes_len) = decompress_headers(bit_vec)?;
     if header_bytes_len == 0 {
         let move_bits = get_bitvec_slice(bit_vec, 1, bit_vec.len())?;
         Ok(PgnData {
             headers,
-            moves: decompress_moves(&move_bits)?,
+            moves: decompress_moves_custom(&move_bits, min_opening_moves, bitvec_len)?,
         })
     } else {
         let move_bits = get_bitvec_slice(bit_vec, header_bytes_len, bit_vec.len())?;
         Ok(PgnData {
             headers,
-            moves: decompress_moves(&move_bits)?,
+            moves: decompress_moves_custom(&move_bits, min_opening_moves, bitvec_len)?,
         })
     }
+}
+
+/// Decompress a PGN file
+pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
+    decompress_pgn_data_custom(bit_vec, MIN_OPENING_MOVES, BITVEC_LEN)
 }
 
 export_to_wasm!("opening_huffman", compress_pgn_data, decompress_pgn_data);
