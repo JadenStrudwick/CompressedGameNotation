@@ -3,6 +3,8 @@ use bit_vec::BitVec;
 use cgn::compression::{bincode, dynamic_huffman, huffman, opening_huffman};
 use cgn::pgn_data::PgnData;
 use rayon::prelude::*;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::{
     fmt::{self, Display, Formatter},
     fs::File,
@@ -85,6 +87,18 @@ pub struct Metrics {
     decompressed_size: usize,
     bits_per_move: f64,
     bits_per_move_excluding_headers: f64,
+}
+
+impl Display for Metrics {
+    /// Display the metrics
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "Time to Compress (seconds): {}, ", self.time_to_compress)?;
+        write!(f, "Time to Decompress (seconds): {}, ", self.time_to_decompress)?;
+        write!(f, "Compressed Size (bits): {}, ", self.compressed_size)?;
+        write!(f, "Decompressed Size (bits): {}, ", self.decompressed_size)?;
+        write!(f, "Bits Per Move: {}, ", self.bits_per_move)?;
+        write!(f, "Bits Per Move Excluding Headers: {}", self.bits_per_move_excluding_headers)
+    }
 }
 
 /// Collect a single metric for a compression strategy.
@@ -320,7 +334,7 @@ impl Display for Summary {
 }
 
 /// Summarize the metrics for a compression strategy.
-pub fn metrics_to_summary(metrics: Vec<Result<Metrics>>) -> Summary {
+pub fn metrics_to_summary(metrics: &Vec<Result<Metrics>>) -> Summary {
     if metrics.is_empty() {
         return Summary {
             total_games: 0,
@@ -336,7 +350,7 @@ pub fn metrics_to_summary(metrics: Vec<Result<Metrics>>) -> Summary {
 
     // filter out and print errors
     let metrics = metrics
-        .into_iter()
+        .iter()
         .filter_map(|x| match x {
             Ok(x) => Some(x),
             Err(e) => {
@@ -376,16 +390,32 @@ pub fn metrics_to_summary(metrics: Vec<Result<Metrics>>) -> Summary {
     }
 }
 
+fn metrics_to_file(label: &str, metrics: &[Result<Metrics>], output_path: &String) {
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(output_path)
+        .unwrap();
+
+    // write the label
+    file.write_all(format!("[{}]\n", label).as_bytes()).unwrap();
+
+    // write the metrics
+    metrics.iter().flatten().for_each(|m| {
+        file.write_all(format!("{}\n", m).as_bytes()).unwrap();
+    });
+}
+
 /// Collects metrics for the specified compression and decompression functions.
-pub fn bench(n: ToTake, db_path: &str) {
-    bench_bincode(&n, db_path);
-    bench_huffman(&n, db_path);
-    bench_dynamic_huffman(&n, db_path);
-    bench_opening_huffman(&n, db_path);
+pub fn bench(n: ToTake, db_path: &str, output_path: &Option<String>) {
+    bench_bincode(&n, db_path, output_path);
+    bench_huffman(&n, db_path, output_path);
+    bench_dynamic_huffman(&n, db_path, output_path);
+    bench_opening_huffman(&n, db_path, output_path);
 }
 
 /// Collects and prints metrics for the bincode_zlib compression strategy.
-fn bench_bincode(n: &ToTake, db_path: &str) {
+fn bench_bincode(n: &ToTake, db_path: &str, output_path: &Option<String>) {
     println!("[BENCHMARK] Collecting metrics for bincode...");
     let metrics = collect_metrics(
         bincode::compress_pgn_data,
@@ -393,11 +423,18 @@ fn bench_bincode(n: &ToTake, db_path: &str) {
         db_path,
         n,
     );
-    println!("{}", metrics_to_summary(metrics));
+
+    // print the summary to the console
+    println!("{}", metrics_to_summary(&metrics));
+
+    // write the metrics to a file if an output path is specified
+    if let Some(output_path) = output_path {
+        metrics_to_file("BINCODE", &metrics, output_path);
+    }
 }
 
 /// Collects and prints metrics for the huffman compression strategy.
-fn bench_huffman(n: &ToTake, db_path: &str) {
+fn bench_huffman(n: &ToTake, db_path: &str, output_path: &Option<String>) {
     println!("[BENCHMARK] Collecting metrics for huffman...");
     let metrics = collect_metrics(
         huffman::compress_pgn_data,
@@ -405,11 +442,18 @@ fn bench_huffman(n: &ToTake, db_path: &str) {
         db_path,
         n,
     );
-    println!("{}", metrics_to_summary(metrics));
+
+    // print the summary to the console
+    println!("{}", metrics_to_summary(&metrics));
+
+    // write the metrics to a file if an output path is specified
+    if let Some(output_path) = output_path {
+        metrics_to_file("HUFFMAN", &metrics, output_path);
+    }
 }
 
 /// Collects and prints metrics for the dynamic huffman compression strategy.
-fn bench_dynamic_huffman(n: &ToTake, db_path: &str) {
+fn bench_dynamic_huffman(n: &ToTake, db_path: &str, output_path: &Option<String>) {
     println!("[BENCHMARK] Collecting metrics for dynamic huffman...");
     let metrics = collect_metrics(
         dynamic_huffman::compress_pgn_data,
@@ -417,11 +461,18 @@ fn bench_dynamic_huffman(n: &ToTake, db_path: &str) {
         db_path,
         n,
     );
-    println!("{}", metrics_to_summary(metrics));
+
+    // print the summary to the console
+    println!("{}", metrics_to_summary(&metrics));
+
+    // write the metrics to a file if an output path is specified
+    if let Some(output_path) = output_path {
+        metrics_to_file("DYNAMIC HUFFMAN", &metrics, output_path);
+    }
 }
 
 /// Collects and prints metrics for the opening huffman compression strategy.
-fn bench_opening_huffman(n: &ToTake, db_path: &str) {
+fn bench_opening_huffman(n: &ToTake, db_path: &str, output_path: &Option<String>) {
     println!("[BENCHMARK] Collecting metrics for opening huffman...");
     let metrics = collect_metrics(
         opening_huffman::compress_pgn_data,
@@ -429,5 +480,12 @@ fn bench_opening_huffman(n: &ToTake, db_path: &str) {
         db_path,
         n,
     );
-    println!("{}", metrics_to_summary(metrics));
+
+    // print the summary to the console
+    println!("{}", metrics_to_summary(&metrics));
+
+    // write the metrics to a file if an output path is specified
+    if let Some(output_path) = output_path {
+        metrics_to_file("OPENING HUFFMAN", &metrics, output_path);
+    }
 }
