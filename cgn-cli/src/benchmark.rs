@@ -93,11 +93,19 @@ impl Display for Metrics {
     /// Display the metrics
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "Time to Compress (seconds): {}, ", self.time_to_compress)?;
-        write!(f, "Time to Decompress (seconds): {}, ", self.time_to_decompress)?;
+        write!(
+            f,
+            "Time to Decompress (seconds): {}, ",
+            self.time_to_decompress
+        )?;
         write!(f, "Compressed Size (bits): {}, ", self.compressed_size)?;
         write!(f, "Decompressed Size (bits): {}, ", self.decompressed_size)?;
         write!(f, "Bits Per Move: {}, ", self.bits_per_move)?;
-        write!(f, "Bits Per Move Excluding Headers: {}", self.bits_per_move_excluding_headers)
+        write!(
+            f,
+            "Bits Per Move Excluding Headers: {}",
+            self.bits_per_move_excluding_headers
+        )
     }
 }
 
