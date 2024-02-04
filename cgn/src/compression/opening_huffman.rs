@@ -3,7 +3,7 @@
 //! moves are encoded using Huffman encoding.
 
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
-use super::utils::openings::{construct_trie_and_hashmap};
+use super::utils::openings::construct_trie_and_hashmap;
 use super::utils::score_move::{generate_moves, get_move_index};
 use super::utils::{compress_headers, decompress_headers, get_bitvec_slice, i8_to_bit_vec};
 
@@ -18,8 +18,12 @@ use std::str;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
-const MIN_OPENING_MOVES: usize = 4;
-const BITVEC_LEN: usize = 12;
+/// Minimum number of opening moves required for an opening to be included for matching
+const MIN_OPENING_MOVES: usize = 0;
+
+/// The length of the bit vector used to encode the opening moves. Creates a bound on the number of
+/// opening moves that can be encoded.
+const BITVEC_LEN: usize = 9;
 
 /// Encode the moves of a PGN file using Huffman encoding and a trie for the opening moves
 fn compress_moves_custom(pgn: &PgnData, min_opening_moves: usize, bitvec_len: usize) -> Result<BitVec> {

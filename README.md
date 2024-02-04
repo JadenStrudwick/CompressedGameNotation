@@ -260,7 +260,53 @@ I think I will use the dataset of openings and import that back into the library
 
 I just finished the refactor to use the txt file. I now need a way to using the CLI to change the parameters of the opening huffman benchmarks. After that I also need to go back and refactor the opening huffman stuff to make sure its all clear. Maybe remove the tsv files and intermediate python stuff I did (after at least commiting it once?)
 
-- [ ] Get CLI working and collect some data on it (find optimal 2 parameters)
-- [ ] Refactor opening huffman to make it clear
-- [ ] Remove tsv files and python stuff
-- [ ] Return benchmark.rs to its previous state (i.e. ensure all strategies get benchmarked)
+- [x] Get CLI working and collect some data on it (find optimal 2 parameters)
+- [x] Refactor opening huffman to make it clear
+- [x] Remove tsv files and python stuff
+- [x] Return benchmark.rs to its previous state (i.e. ensure all strategies get benchmarked)
+
+### 4th of Feburary 2024
+
+- Benchmarks using 1000 games
+
+(0,0)  = 4.495523022693232
+(0,1)  = 4.491847677253882
+(0,2)  = 4.48632676601141
+(0,3)  = 4.47970916641268
+(0,4)  = 4.467410877334513
+(0,5)  = 4.4560253746344065
+(0,6)  = 4.449924932010651
+(0,7)  = 4.440268642762349
+(0,8)  = 4.435313299085358
+(0,9)  = 4.433465757097279 (best)
+(0,10) = 4.436818506858549
+(0,11) = 4.445941825268711
+(0,12) = 4.455501537955869
+(0,13) = 4.465061250643031
+
+(0,8) = 4.4353132990853625
+(1,8) = 4.435313299085366
+(2,8) = 4.435313299085355
+(3,8) = 4.435313299085354
+(4,8) = 4.43531329908536
+(5,8) = 4.43531329908535
+(6,8) = 4.43898500667832
+(7,8) = 4.448585749667183
+
+(0,9) = 4.433465757097279 (best)
+(1,9) = 4.433465757097278 
+(2,9) = 4.433465757097282
+(3,9) = 4.433465757097289
+(4,9) = 4.433465757097279
+(5,9) = 4.43346575709728
+(6,9) = 4.438544144970195
+(7,9) = 4.445301548179923
+
+(0,10) = 4.436818506858547 
+(1,10) = 4.436818506858542
+(2,10) = 4.43681850685854
+(3,10) = 4.436818506858543
+(4,10) = 4.43681850685854
+(5,10) = 4.436818506858541
+(6,10) = 4.439029861072014
+(7,10) = 4.447179819774985
