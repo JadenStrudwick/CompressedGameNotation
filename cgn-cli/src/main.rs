@@ -69,6 +69,10 @@ enum Commands {
         /// Input database path (Lichess PGN database format required)
         #[clap(value_parser)]
         input_db_path: String,
+
+        /// Optional output file path for the benchmark results
+        #[clap(value_parser)]
+        output_path: Option<String>,
     },
     /// Run a genetic algorithm to find the optimal height and dev values for the dynamic Huffman compression algorithm. Used during development.
     GenAlgo {
@@ -183,8 +187,9 @@ fn main() {
         Commands::Bench {
             number_of_games,
             input_db_path,
+            output_path,
         } => {
-            bench(number_of_games, &input_db_path);
+            bench(number_of_games, &input_db_path, &output_path);
         }
         Commands::GenAlgo {
             input_db_path,
