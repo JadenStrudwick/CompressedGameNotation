@@ -171,7 +171,7 @@ fn crossover(
 
 /// Calculate the fitness of an individual
 fn fitness_function(config: &GeneticAlgorithmConfig, individual: &Individual) -> f64 {
-    metrics_to_summary(collect_metrics_custom(
+    metrics_to_summary(&collect_metrics_custom(
         compress_pgn_data_custom,
         decompress_pgn_data_custom,
         &config.input_db_path,
