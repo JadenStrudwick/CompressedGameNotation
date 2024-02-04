@@ -36,8 +36,11 @@ fn extract_openings(txt_contents: &str, min_opening_moves: usize) -> Vec<String>
 }
 
 /// Constructs the trie and hashmap for the openings and their compressed versions
-pub fn construct_trie_and_hashmap(min_opening_moves: usize, bitvec_len: usize) -> (Trie<u8>, HashMap<String, BitVec>) {
-    let openings = extract_openings(include_str!("sorted_opening_moves.txt"), min_opening_moves); 
+pub fn construct_trie_and_hashmap(
+    min_opening_moves: usize,
+    bitvec_len: usize,
+) -> (Trie<u8>, HashMap<String, BitVec>) {
+    let openings = extract_openings(include_str!("sorted_opening_moves.txt"), min_opening_moves);
 
     // construct the trie (for prefix matching the openings) and hashmap (for mapping the opening to a compressed version)
     let mut trie_builder = TrieBuilder::new();
