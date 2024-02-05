@@ -1,5 +1,5 @@
 //! This strategy extends the Huffman encoding strategy by adding a trie to check for common openings.
-//! The opening moves are prefix matched to the trie, represented by a 12 bit vector. The rest of the
+//! The opening moves are prefix matched to the trie, represented by a 9 bit vector. The rest of the
 //! moves are encoded using Huffman encoding.
 
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
@@ -25,7 +25,7 @@ const MIN_OPENING_MOVES: usize = 0;
 /// opening moves that can be encoded.
 const BITVEC_LEN: usize = 9;
 
-/// Encode the moves of a PGN file using Huffman encoding and a trie for the opening moves
+/// Compress the moves of a PGN file using Huffman encoding and a trie for the opening moves
 fn compress_moves_custom(
     pgn: &PgnData,
     min_opening_moves: usize,
@@ -113,7 +113,7 @@ fn compress_moves_custom(
     Ok(move_bits)
 }
 
-/// Compress a PGN file with a custom minimum number of opening moves and bitvec length for the opening trie
+/// Compress a PGN file with a custom minimum number of minimum opening moves and bitvec length for opening sequence
 pub fn compress_pgn_data_custom(
     pgn: &PgnData,
     min_opening_moves: usize,
@@ -136,12 +136,12 @@ pub fn compress_pgn_data_custom(
     Ok(encoded_pgn)
 }
 
-/// Compress a PGN file
+/// Compress a PGN file using the default minimum number of opening moves and bitvec length for the opening sequence
 pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     compress_pgn_data_custom(pgn, MIN_OPENING_MOVES, BITVEC_LEN)
 }
 
-/// Decode the moves of a PGN file using Huffman encoding and a trie for the opening moves
+/// Decompress the moves of a PGN file using Huffman encoding and a trie for the opening moves
 fn decompress_moves_custom(
     move_bits: &BitVec,
     min_opening_moves: usize,

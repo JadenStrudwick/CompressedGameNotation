@@ -16,7 +16,7 @@ use shakmaty::{Chess, Position};
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
-/// Encode the moves of a PGN file using Huffman encoding
+/// Compress the moves of a PGN file using Huffman encoding
 fn compress_moves(pgn: &PgnData) -> Result<BitVec> {
     let book = convert_hashmap_to_weights(&get_lichess_hashmap()).0;
     let mut pos = Chess::default();
@@ -65,7 +65,7 @@ pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     Ok(encoded_pgn)
 }
 
-/// Decode the moves of a PGN file using Huffman encoding
+/// Decompress the moves of a PGN file using Huffman encoding
 fn decompress_moves(move_bits: &BitVec) -> Result<Vec<SanPlusWrapper>> {
     let tree = convert_hashmap_to_weights(&get_lichess_hashmap()).1;
     let mut pos = Chess::default();

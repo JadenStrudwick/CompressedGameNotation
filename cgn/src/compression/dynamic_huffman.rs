@@ -1,6 +1,6 @@
 //! This strategy extends the Huffman encoding strategy by using a dynamic Huffman tree.
 //! The tree is updated after each move is encoded. The height and deviation of a Gaussian
-//! function used to update the weights of the Huffman tree.
+//! function used to update the weights of the Huffman tree after each move.
 
 use super::utils::huffman_codes::{convert_hashmap_to_weights, get_lichess_hashmap};
 use super::utils::score_move::{generate_moves, get_move_index};
@@ -84,7 +84,7 @@ fn compress_moves_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec>
     Ok(move_bits)
 }
 
-/// Compress a PGN file with a custom height and dev for the Gaussian function
+/// Compress a PGN file with a custom height and dev for the Gaussian function that adjusts the weights of the Huffman tree
 pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<BitVec> {
     let mut headers = compress_headers(pgn)?;
     let mut moves = compress_moves_custom(pgn, height, dev)?;
@@ -103,7 +103,7 @@ pub fn compress_pgn_data_custom(pgn: &PgnData, height: f64, dev: f64) -> Result<
     Ok(encoded_pgn)
 }
 
-/// Compress a PGN file
+/// Compress a PGN file with the default height and dev for the Gaussian function that adjusts the weights of the Huffman tree
 pub fn compress_pgn_data(pgn: &PgnData) -> Result<BitVec> {
     compress_pgn_data_custom(pgn, GAUSSIAN_HEIGHT, GAUSSIAN_DEV)
 }
@@ -173,7 +173,7 @@ fn decompress_moves_custom(
     Ok(moves)
 }
 
-/// Compress a PGN string with custom height and dev
+/// Compress a PGN string with a custom height and dev for the Gaussian function that adjusts the weights of the Huffman tree
 pub fn decompress_pgn_data_custom(bit_vec: &BitVec, height: f64, dev: f64) -> Result<PgnData> {
     let (headers, header_bytes_len) = decompress_headers(bit_vec)?;
     if header_bytes_len == 0 {
@@ -191,7 +191,7 @@ pub fn decompress_pgn_data_custom(bit_vec: &BitVec, height: f64, dev: f64) -> Re
     }
 }
 
-/// Decompress a PGN file
+/// Decompress a PGN file with the default height and dev for the Gaussian function that adjusts the weights of the Huffman tree
 pub fn decompress_pgn_data(bit_vec: &BitVec) -> Result<PgnData> {
     decompress_pgn_data_custom(bit_vec, GAUSSIAN_HEIGHT, GAUSSIAN_DEV)
 }
