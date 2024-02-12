@@ -1,5 +1,2 @@
-target/
-Cargo.lock
 lichessDB.pgn
-tarpaulin-report.html
 1M.txt

@@ -1,0 +1,9 @@
+[submodule "cgn"]
+	path = cgn
+	url = https://github.com/JadenStrudwick/cgn.git
+[submodule "cgn-cli"]
+	path = cgn-cli
+	url = https://github.com/JadenStrudwick/cgn-cli.git
+[submodule "cgn-extension"]
+	path = cgn-extension
+	url = https://github.com/JadenStrudwick/cgn-extension.git
