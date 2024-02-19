@@ -310,3 +310,9 @@ I just finished the refactor to use the txt file. I now need a way to using the 
 (5,10) = 4.436818506858541
 (6,10) = 4.439029861072014
 (7,10) = 4.447179819774985
+
+### 19th of Feburary 2024
+
+I've calculated the entropy limit using the Lichess frequencies and found it to be 4.381559249939818. This is pretty interesting, as it means that we're quite close to the limit already with Huffman-type encoding. I could look into Range Coding or ANS, but since all the libraries I find padded the output to a word size, I don't think its worth it in this case. 
+
+If we had millions of moves in a game, it would be worth it, as any padding would be negligible even with a tiny reduction in bits per move. However, since there is approx 40 moves in a game, such padding is significant to the final file sizes.

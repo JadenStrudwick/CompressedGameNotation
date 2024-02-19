@@ -19,7 +19,7 @@ def calculate_entropy(probabilities):
     return entropy
 
 # open the huffman_codes.rs file and read the contents
-rust_function_str = open("cgn/src/compression/utils/huffman_codes.rs").read()
+rust_function_str = open("../cgn/src/compression/utils/huffman_codes.rs").read()
 pairs = parse_rust_function_to_pairs(rust_function_str)
 probabilities = calculate_probabilities(pairs)
 entropy = calculate_entropy(probabilities)
