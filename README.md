@@ -10,3 +10,5 @@ Within this project, I propose a new state-of-the-art compression algorithm for 
 - `cgn-cli`: A command-line interface for compressing PGN files (git submodule).
 - `cgn-extension`: A browser extension for compressing PGN files (git submodule).
 - `JOURNAL.md`: The markdown journal I kept throughout the project.
+
+For more information on each directory, please refer to their respective README files.
