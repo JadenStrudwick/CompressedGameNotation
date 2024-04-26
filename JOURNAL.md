@@ -1,7 +1,7 @@
 # Compressed Game Notation
 3rd Year Project for University of Warwick Computer Science
 
-### 31st of October 2023
+## 31st of October 2023
 
 I am currently working on implementing an iterator for the PGN parser.
 This is to get the benchmarking utilities set up, and allow us to open a 
@@ -50,7 +50,7 @@ These are apparently the rules for a MINIMAL PGN in "reduced export format"
 
 Because of this, I will be ensuring we are compressing to "reduced export format". I cannot use the pgn_reader iterator, as it does not give me the original string of the game
 
-### 2nd of November 2023
+## 2nd of November 2023
 
 I have implemented my own iterator for the PGN parser. It parses each game, and returns the original string of the game.
 This is so we can accurately compute the compression ratio.
@@ -66,7 +66,7 @@ Currently there is approx 75% code coverage. The main areas not covered are benc
 
 I've made some progress on the benchmarking. Right now I am having issues with the bits per move calculations however. I believe this is due to some floating point error, or maybe some game messing with the calculations. I will have to investigate this further.
 
-### 3rd of November 2023
+## 3rd of November 2023
 
 I'm currently trying to set up the benchmarks, but I think I need to refactor the lib slightly.
 
@@ -76,7 +76,7 @@ The utils also contain the metrics collection code required for the benchmarks.
 
 I've also cleaned up the pgn_data module, moving the vistor and sanpluswrapper into the module.
 
-### 21st of November 2023
+## 21st of November 2023
 
 I've been working on the new encoding scheme inspired by Lichess.
 
@@ -84,13 +84,13 @@ Major refactor decision is to use BitVec instead of byte arrays for my compresse
 
 I NEED TO CHECK MY COMMENTS OVER
 
-### 4th of January 2024
+## 4th of January 2024
 
 Had a break over the holidays, and due to the CS324 game, but I am back now. I need to start working on the final compression scheme.
 
 However, I spent some time today just refamiliarizing myself with the codebase, and fixing a few explict 'as' casts that could be replaced with 'try_into' casts.
 
-### 11th of Janurary 2024
+## 11th of Janurary 2024
 
 I have implemented the third strategy, but now need to find the optimal height and deviation for the gaussian. I have written a straightfoward genetic algorithm to try and find the optimal value. I have discovered from this first run that the optimal height is likely between 1 to 25M and the optimal deviation is between 1 and 6.
 
@@ -98,13 +98,13 @@ I am conducting another run of the GA with these new bounds.
 
 Output 7 was made using 100 iterations, not 10 like all the previous. All further runs will be done with 100 iterations.
 
-### 12th of Janurary 2024
+## 12th of Janurary 2024
 
 Just had an interesting problem with dynamic huffman. Since the string variation of the compression uses padding bytes at the end, the decoder would try to decompress the padding bytes, and we had no way to tell it to stop. To fix this, I added a check where if the game is a checkmate or stalemate, we stop decoding. 
 
 I also added clap and a nicer way to inferface with the library via the CLI.
 
-### 14th of Janurary 2024
+## 14th of Janurary 2024
 
 Given the clap interface, I have decided to slightly refactor the format in which the genetic algorithm outputs its results. This is unfortunate, as I have already run some previous outputs through the GA, but I think it is worth it. I will begin my going through the previous outputs, and writing down their max-min and number of games, to produce new configs that represent them.
 
@@ -227,15 +227,15 @@ Given the clap interface, I have decided to slightly refactor the format in whic
 
 I've now deleted these output files, but these above recordings can be used to generate a new set of outputs for the final report.
 
-### 20th of Janurary 2024
+## 20th of Janurary 2024
 
 After meeting with my supervisor, he gave the good idea into looking into compressing the opening sequence of moves into a smaller representation. I implented this idea as 'opening huffman' and it actually beats dynamic huffman as well. This is very promising.
 
-### 21st of Janurary 2024
+## 21st of Janurary 2024
 
 I tried out compressing the results after they are converted to bitvecs using flate2. This doesn't actually work well at all, as flate2 requires you to give it bytes, so converting a bitvec to bytes may add a bunch of padding 0's. This is not ideal and when I roughly tested it on 'opening huffman' it actually made the bits per move around 8, roughly twice as bad. As such, I won't be implementing this idea.
 
-### 28th of Janurary 2024
+## 28th of Janurary 2024
 
 Been doing some reading into AC and ANS codings, after reading a old blog post about chess compression. I started using the constriction library and I got everything working, but I just found out that the encoded data is always padded to a 'word' size. This is not ideal, as it'll increase our compression ratios significantly. I was using a ANS coder, but now I need to find some other library that allows me to access the data without any data padding. This is quite unfortunate.
 
@@ -249,7 +249,7 @@ I think this leaves me with two options:
 
 It seems very difficult to implement a ANS coder, for possibly no gain. I think I will not attempt this technique.
 
-### 3rd of Feburary 2024
+## 3rd of Feburary 2024
 
 Need to optimise the opening huffman encoding further.
 
@@ -265,53 +265,7 @@ I just finished the refactor to use the txt file. I now need a way to using the 
 - [x] Remove tsv files and python stuff
 - [x] Return benchmark.rs to its previous state (i.e. ensure all strategies get benchmarked)
 
-### 4th of Feburary 2024
-
-- Benchmarks using 1000 games
-
-(0,0)  = 4.495523022693232
-(0,1)  = 4.491847677253882
-(0,2)  = 4.48632676601141
-(0,3)  = 4.47970916641268
-(0,4)  = 4.467410877334513
-(0,5)  = 4.4560253746344065
-(0,6)  = 4.449924932010651
-(0,7)  = 4.440268642762349
-(0,8)  = 4.435313299085358
-(0,9)  = 4.433465757097279 (best)
-(0,10) = 4.436818506858549
-(0,11) = 4.445941825268711
-(0,12) = 4.455501537955869
-(0,13) = 4.465061250643031
-
-(0,8) = 4.4353132990853625
-(1,8) = 4.435313299085366
-(2,8) = 4.435313299085355
-(3,8) = 4.435313299085354
-(4,8) = 4.43531329908536
-(5,8) = 4.43531329908535
-(6,8) = 4.43898500667832
-(7,8) = 4.448585749667183
-
-(0,9) = 4.433465757097279 (best)
-(1,9) = 4.433465757097278 
-(2,9) = 4.433465757097282
-(3,9) = 4.433465757097289
-(4,9) = 4.433465757097279
-(5,9) = 4.43346575709728
-(6,9) = 4.438544144970195
-(7,9) = 4.445301548179923
-
-(0,10) = 4.436818506858547 
-(1,10) = 4.436818506858542
-(2,10) = 4.43681850685854
-(3,10) = 4.436818506858543
-(4,10) = 4.43681850685854
-(5,10) = 4.436818506858541
-(6,10) = 4.439029861072014
-(7,10) = 4.447179819774985
-
-### 19th of Feburary 2024
+## 19th of Feburary 2024
 
 I've calculated the entropy limit using the Lichess frequencies and found it to be 4.381559249939818. This is pretty interesting, as it means that we're quite close to the limit already with Huffman-type encoding. I could look into Range Coding or ANS, but since all the libraries I find padded the output to a word size, I don't think its worth it in this case. 
 
